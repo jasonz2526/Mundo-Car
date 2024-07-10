@@ -1,27 +1,54 @@
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.App {
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  width: 100vw;
+  transition: background-image 0.8s ease-in-out;
+}
+
+.top-inputs {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  /*font-size: calc(10px + 2vmin);*/
-  color: rgb(240, 240, 240);
+  align-items: center;
+  padding: 10px;
+  gap: 10px; 
 }
 
-.main-input {
-  width: 100px; 
-  padding: 5px; 
-  margin-left: 5px;
-  margin-bottom: 15px;
-  font-size: 14px; 
-  height: 10px;
+.name-input, .tag-input, .select-input {
+  padding: 5px;
+  font-size: 14px;
+  border-color: gray;
 }
 
-.champ-input {
-  width: 150px; 
-  font-size: 14px; 
-  color: rgb(0, 0, 0);
-  margin-bottom: 15px;
+.name-input {
+  width: 200px;
+  height: 25px;
+  margin-right: 10px;
+  border-radius: 5px;
+}
+
+.tag-input {
+  width: 100px;
+  height: 25px;
+  margin-right: 5px;
+  border-radius: 5px;
+}
+
+.select-input {
+  width: 200px;
+}
+
+.submit-button {
+  padding: 5px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
 }
