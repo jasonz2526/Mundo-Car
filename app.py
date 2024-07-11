@@ -74,7 +74,11 @@ def api_get_puuid():
             cache[cache_key].append(result['champion'])
             save_cache_to_file()
 
-            csv_file_path = f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv"
+            csv_folder = 'match_ids_csvs'
+            if not os.path.exists(csv_folder):
+                os.makedirs(csv_folder)
+            csv_file_path = os.path.join(csv_folder, f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv")
+            #csv_file_path = f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv"
             with open(csv_file_path, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['Match ID'])  # Replace with actual column names if necessary
