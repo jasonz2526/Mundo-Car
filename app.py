@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 import pandas as pd
 from flask_cors import CORS
-from riot_api import get_puuid, get_matches_with_champion
+from riot_api import get_puuid, get_matches_with_champion, get_champ_name
 import cassiopeia as cass
 import os, json, csv
 
@@ -22,14 +22,15 @@ def load_cache_from_file():
 
 cache = load_cache_from_file()
 
-@app.route('/api/get_puuid', methods=['POST'])
+@app.route('/api/get_everything', methods=['POST'])
 def api_get_puuid():
     api_key = 'RGAPI-28887941-ef83-4b09-869e-a51fd2e2b671' 
     data = request.json
     summoner_name = data.get('summonerName')
     tagline = data.get('tagline')
+    role = data.get('role')
     region = data.get('region')
-    selected_champion = data.get('selectedChampion')
+    selected_champion = data.get('selectedChampion')['value']
     
     if(region == "NA" or region == "BR"):
         mass_region = 'americas'
@@ -44,24 +45,36 @@ def api_get_puuid():
     cache_key = f"{summoner_name}#{tagline}"
 
     if cache_key in cache:
-        print(f"Cache hit for {cache_key}")
-        result = cache[cache_key]
+        champions = cache[cache_key]
+        for champ_dict in champions:
+            if champ_dict.get('champion') == selected_champion:
+                print(f"Cache hit for {cache_key} and champion {selected_champion}")
+                result = champ_dict
+                should_fetch_data = False
+                break
+        else:
+            print(f"Cache miss for {cache_key} and champion {selected_champion}")
+            should_fetch_data = True
     else:
         print(f"Cache miss for {cache_key}")
+        should_fetch_data = True
+
+    if should_fetch_data:
         try:
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
-            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, 50)
+            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 50)
 
             result = {
-                'summonerName': summoner_name,
-                'tagline': tagline,
                 'champion': selected_champion,
                 'champList': champ_list
             }
-            cache[cache_key] = result
+            if cache_key not in cache:
+                cache[cache_key] = []
+            cache[cache_key].append(result['champion'])
+            save_cache_to_file()
 
-            csv_file_path = f"{summoner_name}_{tagline}_{selected_champion['value']}_match_id_list.csv"
+            csv_file_path = f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv"
             with open(csv_file_path, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['Match ID'])  # Replace with actual column names if necessary
@@ -89,13 +102,6 @@ def get_player_stats():
 
     data = duration_win_data.to_dict(orient='records')
     return jsonify(data)
-
-@app.route('/api/reset_cache', methods=['POST'])
-def reset_cache():
-    global cache
-    cache = {}
-    save_cache_to_file()
-    return jsonify({'message': 'Cache cleared successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

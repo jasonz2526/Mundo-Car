@@ -16,7 +16,7 @@ import axios from 'axios';
   );
 }*/
 const championNames = [
-  'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Amumu', 'Anivia', 'Annie', 'Aphelios', 'Ashe', 'Aurelion Sol',
+  'N/A', 'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Amumu', 'Anivia', 'Annie', 'Aphelios', 'Ashe', 'Aurelion Sol',
   'Azir', 'Bard', 'Bel\'Veth', 'Blitzcrank', 'Brand', 'Braum', 'Briar', 'Caitlyn', 'Camille', 'Cassiopeia', 'Cho\'Gath',
   'Corki', 'Darius', 'Diana', 'Dr. Mundo', 'Draven', 'Ekko', 'Elise', 'Evelynn', 'Ezreal', 'Fiddlesticks',
   'Fiora', 'Fizz', 'Galio', 'Gangplank', 'Garen', 'Gnar', 'Gragas', 'Graves', 'Gwen', 'Hecarim', 'Heimerdinger', 'Hwei',
@@ -43,15 +43,26 @@ const regionOptions = [
   { value: 'KR', label: 'Korea' }
 ];
 
+const roleOptions = [
+  { value: 'N/A', label: 'N/A' },
+  { value: 'TOP', label: 'Top' },
+  { value: 'JGL', label: 'Jungle' },
+  { value: 'MID', label: 'Middle' },
+  { value: 'BOT', label: 'Bottom' },
+  { value: 'SUP', label: 'Support' }
+]
+
 function App() {
   const [backgroundImage, setBackgroundImage] = useState(splashArts[0]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setBackgroundImage((prevImage) => {
-        const currentIndex = splashArts.indexOf(prevImage);
-        const nextIndex = (currentIndex + 1) % splashArts.length;
-        return splashArts[nextIndex];
+        //const currentIndex = splashArts.indexOf(prevImage);
+        //const nextIndex = (currentIndex + 1) % splashArts.length;
+        //return splashArts[nextIndex];
+        const randomIndex = Math.floor(Math.random() * splashArts.length);
+        return splashArts[randomIndex];
       });
     }, 10000); // Change the background every 10 seconds
 
@@ -60,6 +71,7 @@ function App() {
 
   const [summonerName, setSummonerName] = useState('');
   const [tagline, setTagline] = useState('');
+  const [role, setRoles] = useState('');
   const [region, setRegion] = useState('');
   const [selectedChampion, setSelectedChampion] = useState('');
 
@@ -70,6 +82,10 @@ function App() {
   const handleTaglineChange = (event) => {
     setTagline(event.target.value);
   };
+
+  const handleRoleChange = (selectedOption) => {
+    setRoles(selectedOption.value);
+  }
 
   const handleRegionChange = (selectedOption) => {
     setRegion(selectedOption.value);
@@ -82,9 +98,10 @@ function App() {
   
   const handleSubmit = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/get_puuid', {
+      const response = await axios.post('http://127.0.0.1:5000/api/get_everything', {
         summonerName,
         tagline,
+        role,
         region,
         selectedChampion
       });
@@ -126,6 +143,13 @@ function App() {
           className="tag-input"
         />
         <Select
+          value={roleOptions.find(option => option.value === role)}
+          onChange={handleRoleChange}
+          options={roleOptions}
+          placeholder="Role"
+          className="select-input"
+        />
+        <Select
           value={regionOptions.find(option => option.value === region)}
           onChange={handleRegionChange}
           options={regionOptions}
@@ -138,12 +162,7 @@ function App() {
           options={championNames.map(champion => ({ label: champion, value: champion }))}
           isSearchable
           placeholder="Champion"
-          filterOption={(option, inputValue) => {
-            if (!inputValue) return true;
-            const input = inputValue.toLowerCase();
-            const label = option.label.toLowerCase();
-            return label.includes(input);
-          }}
+          filterOption={customFilterOption}
           className="select-input"
         />
         <button onClick={handleSubmit} className="submit-button">Submit</button>
