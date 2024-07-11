@@ -47,7 +47,7 @@ def api_get_puuid():
     if cache_key in cache:
         champions = cache[cache_key]
         for champ_dict in champions:
-            if champ_dict.get('champion') == selected_champion:
+            if champ_dict['champion'] == selected_champion:
                 print(f"Cache hit for {cache_key} and champion {selected_champion}")
                 result = champ_dict
                 should_fetch_data = False
