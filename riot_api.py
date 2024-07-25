@@ -2,6 +2,7 @@ import requests
 from flask import jsonify
 import cassiopeia as cass
 import pandas as pd
+import flask_socketio 
 
 cass.set_riot_api_key('RGAPI-28887941-ef83-4b09-869e-a51fd2e2b671')
 
@@ -46,22 +47,29 @@ def get_champ_name(region, champion_name):
             regional_name = champ.name
     return regional_name
 
-def get_matches_with_champion(champion_name, summoner, puuid, continent, region, num):
+def get_matches_with_champion(champion_name, summoner, puuid, continent, region, num, limit):
     match_history = cass.get_match_history(continent=continent, puuid=puuid)
     match_list = []
     regional_name = get_champ_name(region, champion_name)
     
-    count = 0
+    hit_count = 0
+    total_count = 0
     for match in match_history:
+        total_count += 1
         try:
             if (match.participants and match.is_remake == False and 
                 (match.queue.id == 420 or match.queue.id == 440 or match.queue.id == 490)): #Proper Queues for Analysis
-                if count == num:
+                if hit_count == num:
                     break
+                if total_count == limit:
+                    return None
                 for participant in match.participants:
                     if participant.summoner == summoner and participant.champion.name == regional_name:
-                            match_list.append(match.id)
-                            count += 1
+                        match_list.append(match.id)
+                        hit_count += 1
+                        #emit('progress', (hit_count / num) * 100)
+                        print((hit_count / num) * 100)
+                        flask_socketio.emit('progress', {'progress': (hit_count / num) * 100}, namespace='/')
         except AttributeError:
             continue
         except IndexError:

@@ -1,12 +1,16 @@
 from flask import Flask, jsonify, request
+import flask_socketio
+from flask_socketio import SocketIO
 import pandas as pd
 from flask_cors import CORS
 from riot_api import get_puuid, get_matches_with_champion, get_champ_name
+from data_gathering import gather_match_info
 import cassiopeia as cass
-import os, json, csv
+import os, json, csv, time
 
 app = Flask(__name__)
 CORS(app) 
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 CACHE_FILE = 'cache.json'
 
@@ -30,7 +34,7 @@ def api_get_puuid():
     tagline = data.get('tagline')
     role = data.get('role')
     region = data.get('region')
-    selected_champion = data.get('selectedChampion')['value']
+    selected_champion = data.get('selectedChampion')
     
     if(region == "NA" or region == "BR"):
         mass_region = 'americas'
@@ -47,7 +51,7 @@ def api_get_puuid():
     if cache_key in cache:
         champions = cache[cache_key]
         for champ_dict in champions:
-            if champ_dict['champion'] == selected_champion:
+            if champ_dict == selected_champion:
                 print(f"Cache hit for {cache_key} and champion {selected_champion}")
                 result = champ_dict
                 should_fetch_data = False
@@ -63,33 +67,40 @@ def api_get_puuid():
         try:
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
-            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 50)
+            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 10, 1000)
+            print(champ_list)
+            if champ_list is None:
+                return 
 
             result = {
                 'champion': selected_champion,
                 'champList': champ_list
             }
-            if cache_key not in cache:
+            '''if cache_key not in cache:
                 cache[cache_key] = []
             cache[cache_key].append(result['champion'])
-            save_cache_to_file()
+            save_cache_to_file()'''
 
-            csv_folder = 'match_ids_csvs'
-            if not os.path.exists(csv_folder):
-                os.makedirs(csv_folder)
+            csv_folder = 'pro_ids_csvs'
             csv_file_path = os.path.join(csv_folder, f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv")
             #csv_file_path = f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv"
-            with open(csv_file_path, 'w', newline='') as f:
+            '''with open(csv_file_path, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Match ID'])  # Replace with actual column names if necessary
+                writer.writerow(['Match ID'])  
                 for match_id in result['champList']:
-                    writer.writerow([match_id])
+                    writer.writerow([match_id])'''
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    gather_match_info(summoner_name, tagline, selected_champion, mass_region, api_key)
+
     return jsonify(result), 200
 
+
+@app.route('/data-stats', methods=['GET'])
+def get_data_stats():
+    user_data = pd.read_csv("/Users/jasonzhao/Desktop/Jungle-Diff/match_ids_csvs/feedmeiron_0696_Kai'Sa_match_id_list.csv")
 
 @app.route('/player-stats', methods=['GET'])
 def get_player_stats():
@@ -107,5 +118,15 @@ def get_player_stats():
     data = duration_win_data.to_dict(orient='records')
     return jsonify(data)
 
+@socketio.on('connect')
+def test_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(debug=True)
+    socketio.run(app, debug=True)
+

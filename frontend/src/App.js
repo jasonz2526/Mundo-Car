@@ -2,19 +2,12 @@ import './App.css';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import PlayerStats from './PlayerStats';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import splashArtsData from './splash_arts.json';
+import { io } from 'socket.io-client';
+import DataStats from './DataStats';
 
-/*function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>League of Legends Player Stats</h1>
-        <PlayerStats />
-      </header>
-    </div>
-  );
-}*/
 const championNames = ['N/A', ...Object.keys(splashArtsData)];
 
 const regionOptions = [
@@ -36,9 +29,9 @@ const roleOptions = [
 ]
 
 function App() {
-  //const [backgroundImage, setBackgroundImage] = useState(splashArts[0]);
-  //const [backgroundImage, setBackgroundImage] = useState('');
-  //const [splashArts, setSplashArts] = useState([]);
+  const navigate = useNavigate();
+  //const socket = io('http://127.0.0.1:5000');
+  const socket = io();
   const evelynnSplashArts = splashArtsData['Evelynn'];
   const initialBackgroundImage = evelynnSplashArts[0];
   const [backgroundImage, setBackgroundImage] = useState(initialBackgroundImage);
@@ -48,20 +41,8 @@ function App() {
   const [role, setRoles] = useState('');
   const [region, setRegion] = useState('');
   const [selectedChampion, setSelectedChampion] = useState({ label: 'Evelynn', value: 'Evelynn' });
-
-  /*useEffect(() => {
-    const interval = setInterval(() => {
-      setBackgroundImage((prevImage) => {
-        //const currentIndex = splashArts.indexOf(prevImage);
-        //const nextIndex = (currentIndex + 1) % splashArts.length;
-        //return splashArts[nextIndex];
-        const randomIndex = Math.floor(Math.random() * splashArts.length);
-        return splashArts[randomIndex];
-      });
-    }, 10000); // Change the background every 10 seconds
-
-    return () => clearInterval(interval);
-  }, []);*/
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (selectedChampion.value && splashArtsData[selectedChampion.value]) {
@@ -75,10 +56,31 @@ function App() {
         const randomIndex = Math.floor(Math.random() * splashArts.length);
         setBackgroundImage(splashArts[randomIndex]);
       }
-    }, 5000); // Change background every 10 seconds
+    }, 5000); // Change background every 5 seconds
 
     return () => clearInterval(interval);
   }, [splashArts]);
+
+  useEffect(() => {
+    socket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+    });
+
+    socket.on('progress', (data) => {
+      console.log('Progress data received:', data);
+      setProgress(data.progress);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from WebSocket server');
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('progress');
+      socket.off('disconnect');
+    };
+  }, [socket]);
 
   const handleSummonerNameChange = (event) => {
     setSummonerName(event.target.value);
@@ -99,16 +101,19 @@ function App() {
   const handleChampionChange = (selectedOption) => {
     setSelectedChampion(selectedOption);
   };
-
   
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault(); 
+    if (loading) return; 
+    setLoading(true);
+
     try {
       const response = await axios.post('http://127.0.0.1:5000/api/get_everything', {
         summonerName,
         tagline,
         role,
         region,
-        selectedChampion
+        selectedChampion: selectedChampion.value // Ensure only value is sent
       });
 
       if (response.status === 404) {
@@ -116,10 +121,22 @@ function App() {
         return;
       }
 
-      console.log('Response from server:', response.data);
+      navigate('/data-stats', {
+        state: {
+          summonerName,
+          tagline,
+          role,
+          region,
+          selectedChampion: selectedChampion.value,
+          data: response.data // Pass the server response to the next page
+        }
+      });
       
     } catch (error) {
       console.error('Error submitting data:', error);
+      alert('Error submitting data. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,12 +144,12 @@ function App() {
     if (!inputValue) return true;
     const input = inputValue.toLowerCase();
     const label = option.label.toLowerCase();
-    return label.includes(input);
-  };
+    return label.startsWith(input); 
+  };  
 
   return (
     <div className="App" style={{ backgroundImage: `url(${backgroundImage})` }}>
-     <div className="top-inputs">
+     <div className={`top-inputs ${loading ? 'loading-active' : ''}`}>
         <input
           type="text"
           value={summonerName}
@@ -170,10 +187,26 @@ function App() {
           filterOption={customFilterOption}
           className="select-input"
         />
-        <button onClick={handleSubmit} className="submit-button">Submit</button>
+        <button onClick={handleSubmit} className="submit-button">Search</button>
       </div>
+      {loading && (
+        <div className="loading-container">
+          <div className="loading-bar" style={{ width: `${progress}%` }}></div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default App;
+function RootApp() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/data-stats" element={<DataStats />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default RootApp;

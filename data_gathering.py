@@ -1,5 +1,7 @@
 import cassiopeia as cass
 import pandas as pd
+import fnmatch, os, csv
+from riot_api import get_puuid
 
 def get_match_data_adjusted(matches, puuid, region):
     data = {
@@ -176,7 +178,37 @@ def get_match_data_adjusted(matches, puuid, region):
                 data['wards_killed'].append(adjust_stat(stats.wards_killed))
                 data['wards_placed'].append(adjust_stat(stats.wards_placed))
                 data['win'].append(stats.win)  
-
-    
     df = pd.DataFrame(data)
     return df         
+
+def read_csv(file_path):
+    match_list = []
+    name = open(file_path, 'r')
+    file = csv.DictReader(name)
+    for col in file:
+        match_list.append(int(col['Match ID']))
+    return match_list
+
+def search_csvs(search_pattern):
+    directory = '/Users/jasonzhao/Desktop/Jungle-Diff/match_ids_csvs/'
+    try:
+        matching_files = [directory + f for f in os.listdir(directory) if fnmatch.fnmatch(f.lower(), search_pattern.lower())]
+        return matching_files
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+def gather_match_info(summoner_name, tagline, selected_champion, mass_region, api_key):
+    champ_csvs = search_csvs(f"*{selected_champion}*")
+    ex_csv = read_csv(champ_csvs[0])
+    #puuid='O_Xv1YfLdA03TIfhoFBAL4BpEQzbGVyDQqbMAe_pWOk54ttYefJ6IsMvqssKiXy7KrVs0CeDyzEyPQ'
+    puuid = get_puuid(summoner_name,tagline,mass_region,api_key)
+    ex_data = get_match_data_adjusted(ex_csv,puuid=puuid,region="NA")
+    csv_folder = 'match_info_csvs'
+    csv_filename = f"{summoner_name}_{tagline}_{selected_champion}_match_info.csv"
+    csv_file_path = os.path.join(csv_folder, csv_filename)
+    ex_data.to_csv(csv_file_path)
+
+
+
+
