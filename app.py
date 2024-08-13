@@ -13,6 +13,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 CACHE_FILE = 'cache.json'
+cacheSwitch = False
 
 def save_cache_to_file():
     with open(CACHE_FILE, 'w') as f:
@@ -30,11 +31,12 @@ cache = load_cache_from_file()
 def api_get_puuid():
     api_key = 'RGAPI-28887941-ef83-4b09-869e-a51fd2e2b671' 
     data = request.json
-    summoner_name = data.get('summonerName')
-    tagline = data.get('tagline')
+    summoner_name = data.get('summonerName', '').replace(' ', '').lower()
+    tagline = data.get('tagline', '').replace(' ', '').lower()
     role = data.get('role')
     region = data.get('region')
     selected_champion = data.get('selectedChampion')
+    type = data.get('type')
     
     if(region == "NA" or region == "BR"):
         mass_region = 'americas'
@@ -67,7 +69,7 @@ def api_get_puuid():
         try:
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
-            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 10, 1000)
+            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 50, 1000)
             print(champ_list)
             if champ_list is None:
                 return 
@@ -76,24 +78,28 @@ def api_get_puuid():
                 'champion': selected_champion,
                 'champList': champ_list
             }
-            '''if cache_key not in cache:
-                cache[cache_key] = []
-            cache[cache_key].append(result['champion'])
-            save_cache_to_file()'''
+            if cacheSwitch:
+                if cache_key not in cache:
+                    cache[cache_key] = []
+                cache[cache_key].append(result['champion'])
+                save_cache_to_file()
 
-            csv_folder = 'pro_ids_csvs'
+            if type == 'Pro':
+                csv_folder = 'pro_ids_csvs'
+            else:
+                csv_folder = "match_ids_csvs"
             csv_file_path = os.path.join(csv_folder, f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv")
             #csv_file_path = f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv"
-            '''with open(csv_file_path, 'w', newline='') as f:
+            with open(csv_file_path, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['Match ID'])  
                 for match_id in result['champList']:
-                    writer.writerow([match_id])'''
+                    writer.writerow([match_id])
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    gather_match_info(summoner_name, tagline, selected_champion, mass_region, api_key)
+    #gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type)
 
     return jsonify(result), 200
 
@@ -127,6 +133,6 @@ def test_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    socketio.run(app, debug=True)
+    app.run(debug=True)
+    #socketio.run(app, debug=True)
 

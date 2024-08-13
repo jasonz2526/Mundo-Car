@@ -57,8 +57,9 @@ def get_matches_with_champion(champion_name, summoner, puuid, continent, region,
     for match in match_history:
         total_count += 1
         try:
+            queue_type = match.queue.id
             if (match.participants and match.is_remake == False and 
-                (match.queue.id == 420 or match.queue.id == 440 or match.queue.id == 490)): #Proper Queues for Analysis
+                (queue_type in [420, 440, 490])): #Proper Queues for Analysis
                 if hit_count == num:
                     break
                 if total_count == limit:
@@ -73,5 +74,7 @@ def get_matches_with_champion(champion_name, summoner, puuid, continent, region,
         except AttributeError:
             continue
         except IndexError:
+            continue
+        except:
             continue
     return match_list

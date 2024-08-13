@@ -5,7 +5,6 @@ import axios from 'axios';
 const DataStats = () => {
   const location = useLocation();
   const { summonerName, tagline, role, region, selectedChampion, data } = location.state || {};
-
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
