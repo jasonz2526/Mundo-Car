@@ -5,8 +5,9 @@ import PlayerStats from './PlayerStats';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import splashArtsData from './splash_arts.json';
-import mundoCarLogo from './mundo-car-logo.png'
-import searchButton from './search-button.png'
+import mundoCarLogo from './assets/pngs/mundo-car-logo.png'
+import searchButton from './assets/pngs/search-button.png'
+import mundoGif from './assets/gifs/mundo.mp4'; 
 //import { io } from 'socket.io-client';
 //import DataStats from './DataStats';
 
@@ -66,7 +67,7 @@ function App() {
   const [selectedChampion, setSelectedChampion] = useState({ label: 'Dr. Mundo', value: 'Dr. Mundo' });
   const [type, setType] = useState('');
   const [loading, setLoading] = useState(false);
-  //const [progress, setProgress] = useState(0);
+  const [activeButton, setActiveButton] = useState(null);
 
   useEffect(() => { //for pre-loading jpgs to avoid loading while they cycle
     splashArts.forEach((image) => {
@@ -86,7 +87,7 @@ function App() {
       const interval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * splashArts.length); //random splash
         setBackgroundImage(splashArts[randomIndex]); 
-      }, 5000); // Change background every 5 seconds
+      }, 8000); // Change background every x milliseconds
 
       return () => clearInterval(interval);
     }
@@ -141,6 +142,10 @@ function App() {
     setType(selectedOption.value)
   }
 
+  const handleButtonClick = (buttonId) => {
+    setActiveButton(buttonId);
+  };
+  
   const handleSubmit = async (event) => {
     event.preventDefault(); 
     if (loading) return; 
@@ -196,8 +201,11 @@ function App() {
 
   return (
     <div className="App">
-      <div className="splash-section" style={{ backgroundImage: `url(${backgroundImage})` }}>
-        <div className={`top-bar ${loading ? 'loading-active' : ''}`}>
+      <div className = "background-container">
+        <div className="gradient-overlay"></div>
+        <div className="splash-section" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
+      </div>
+      <div className="top-bar">
           <div className="logo-container">
             <img src={mundoCarLogo} alt="Mundo Car Logo" className="logo" />
             {/*<span className="logo-text">MUNDO CAR</span> */}
@@ -209,9 +217,10 @@ function App() {
               <span className="slider"></span>
             </label>
           </div>
-        </div>
+      </div>
+      <div className={`main-content ${loading ? 'loading-active' : ''}`}>
         <div className="title-container">
-          {/*<h1 className="title-text">MUNDO CAR</h1>*/}
+          <h1 className="title-text">MUNDO CAR</h1>
         </div>
         <div className="row-inputs">   
           <div className="select-container">
@@ -273,27 +282,72 @@ function App() {
             <div className="search-button-container" onClick={handleSubmit}>
               <img src={searchButton} alt="Search" className="search-button" />
             </div>
-          </div>
-
-        {loading && (
-          <div className="loading-container">
-            {/*<div className="loading-bar" style={{ width: `${progress}%` }}></div>*/}
-          </div>
-        )}
+        </div>
       </div>
+      {loading && (
+          <div className="loading-container">
+            <div className="loading-bar"> </div>
+          </div>
+      )}
       <div className="info-section">
-        <div className="info-box">
-          <h2>What Mundo?</h2>
-          <p>This app is designed to compare your data against the very best players in League of Legends.</p>
+        <div className="info-holder">
+          <button
+            className={`info-button ${activeButton === 'what' ? 'active' : ''}`}
+            onClick={() => handleButtonClick('what')}
+          >
+            What is Mundo?
+          </button>
+          <button
+            className={`info-button ${activeButton === 'how' ? 'active' : ''}`}
+            onClick={() => handleButtonClick('how')}
+          >
+            How does Mundo?
+          </button>
+          <button
+            className={`info-button ${activeButton === 'why' ? 'active' : ''}`}
+            onClick={() => handleButtonClick('why')}
+          >
+            Why use Mundo?
+          </button>
+          <button
+            className={`info-button ${activeButton === 'mundo' ? 'active' : ''}`}
+            onClick={() => handleButtonClick('mundo')}
+          >
+            Why Mundo Car?
+          </button>
         </div>
-        <div className="info-box">
-          <h2>How Mundo?</h2>
-          <p>We analyze your gameplay and provide insights based on various in-game statistics.</p>
-        </div>
-        <div className="info-box">
-          <h2>Why Mundo?</h2>
-          <p>We aim to help you improve your gameplay and reach your full potential in the game.</p>
-        </div>
+        {/*<div className="content-container">*/}
+          {activeButton === 'what' && ( 
+            <div className = "content-container">
+              <div className = "content-text"> 
+                <h2>Simple, Powerful, and Fun. Mundo-Style.</h2>
+                <p>Mundo Car is the culmination of stuff that I would've loved coming into League. As one of the hardest games to even get started, with only general tier lists and YouTube guides to work with, personlly improving and not going 0-10 every game seemed impossible.</p>
+                <p>As such, to make the experience as personalized and informative as possible, Mundo utilizes your in-game stats and compares it to the best in the world to answer two simple questions:</p>
+                <p>1. What am I doing wrong?</p>
+                <p>2. How can I do better?</p>
+              </div>
+              <div className = "content-image"> 
+              <video 
+                src={mundoGif} 
+                width="100%" 
+                height="auto" 
+                autoPlay 
+                muted 
+                onEnded={(e) => e.target.pause()} 
+              />
+              </div>
+            </div>
+          )}
+          {activeButton === 'how' && (
+            <p>Content for How Mundo?</p>
+          )}
+          {activeButton === 'why' && (
+            <h2>For New Players, by Old Ones</h2>
+          )}
+          {activeButton === 'mundo' && (
+            <p>Content for Mundo?</p>
+          )}
+       {/*</div>*/}
       </div>
     </div>
   );

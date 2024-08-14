@@ -194,9 +194,9 @@ def read_csv(file_path):
 
 def search_csvs(summoner_name, tagline, selected_champion, type):
     if type == 'Pro':
-        directory = '/Users/jasonzhao/Desktop/Jungle-Diff/pro_ids_csvs/'
+        directory = '/Users/jasonzhao/Desktop/Mundo-Car/pro_ids_csvs/'
     else:
-        directory = '/Users/jasonzhao/Desktop/Jungle-Diff/match_ids_csvs/'
+        directory = '/Users/jasonzhao/Desktop/Mundo-Car/match_ids_csvs/'
     search_pattern = f"{summoner_name}_{tagline}_{selected_champion}_*"
     try:
         matching_files = [os.path.join(directory, f) for f in os.listdir(directory) if fnmatch.fnmatch(f.lower(), search_pattern.lower())]

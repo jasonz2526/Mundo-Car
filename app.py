@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-import flask_socketio
+#import flask_socketio
 from flask_socketio import SocketIO
 import pandas as pd
 from flask_cors import CORS
@@ -14,6 +14,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 CACHE_FILE = 'cache.json'
 cacheSwitch = False
+limit = 50
 
 def save_cache_to_file():
     with open(CACHE_FILE, 'w') as f:
@@ -69,7 +70,7 @@ def api_get_puuid():
         try:
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
-            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 50, 1000)
+            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, 50, limit)
             print(champ_list)
             if champ_list is None:
                 return 
@@ -106,7 +107,7 @@ def api_get_puuid():
 
 @app.route('/data-stats', methods=['GET'])
 def get_data_stats():
-    user_data = pd.read_csv("/Users/jasonzhao/Desktop/Jungle-Diff/match_ids_csvs/feedmeiron_0696_Kai'Sa_match_id_list.csv")
+    user_data = pd.read_csv("/Users/jasonzhao/Desktop/Mundo-Car/match_ids_csvs/feedmeiron_0696_Kai'Sa_match_id_list.csv")
 
 @app.route('/player-stats', methods=['GET'])
 def get_player_stats():

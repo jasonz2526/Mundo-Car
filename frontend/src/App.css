@@ -3,25 +3,79 @@
   overflow-x: hidden; 
 }
 
-.splash-section {
-  min-height: 80vh;
+@font-face {
+  font-family: 'LeagueTitleFont';
+  src: url('./assets/fonts/BeaufortforLOL-Heavy.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LeagueBoldTextFont';
+  src: url('./assets/fonts/Spiegel-Bold.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LeagueRegularTextFont';
+  src: url('./assets/fonts/Spiegel-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.background-container {
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  margin: 0 auto;
+  height: auto;
+}
+
+.splash-section {
+  position: absolute;
+  height: 110vh;
+  width: 100%;
   background-size: cover;
   background-position: center top;
-  display: flex;
-  flex-direction: column;
   transition: background-image 1.3s ease-in-out;
 }
 
+.gradient-overlay {
+  position: absolute;
+  height: 110vh;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.8) 85%, rgba(0, 0, 0, 1) 100%), /* Bottom gradient */
+    radial-gradient(circle at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.1) 70%, rgba(0, 0, 0, 0.8) 100%); /* Other gradients */
+  z-index: 3;
+  pointer-events: none; 
+}
+
 .top-bar {
+  z-index: 5;
   display: flex;
   align-items: center;
-  background-color: #1E2328;
+  background-color: black;
   opacity: 0.8;
-  height: 60px;
+  height: 40px;
   justify-content: center;
   position: relative;
+}
+
+.main-content {
+  visibility: visible;
+  min-height: 80vh;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 4;
 }
 
 .logo-container {
@@ -32,7 +86,7 @@
 .logo {
   position: absolute;
   left: 20px;
-  height: 50px; 
+  height: 30px; 
 }
 
 .logo-text {
@@ -73,7 +127,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: #67a8ed;
   transition: .4s;
   border-radius: 35px;
 }
@@ -91,7 +145,7 @@
 }
 
 input:checked + .slider {
-  background-color: #67a8ed;
+  background-color: #ccc;
 }
 
 input:checked + .slider:before {
@@ -101,12 +155,12 @@ input:checked + .slider:before {
 .title-container {
   text-align: center;
   position: relative;
-  top: 220px;
+  top: 260px;
 }
 
 .title-text {
-  font-family: 'Impact', sans-serif;
-  font-size: 50px;
+  font-family: 'LeagueTitleFont';
+  font-size: 70px;
   color: #fff;
 }
 
@@ -120,7 +174,7 @@ input:checked + .slider:before {
   padding: 10px;
   max-width: fit-content;
   margin: 0 auto;
-  top: 340px;
+  top: 230px;
   position: relative;
 }
 
@@ -179,7 +233,7 @@ input:checked + .slider:before {
 }
 
 .search-button-container:hover .search-button {
-  transform: scale(1.2); /* Slightly enlarges on hover */
+  transform: scale(1.2); 
 }
 
 .loading-container {
@@ -193,38 +247,91 @@ input:checked + .slider:before {
 
 .loading-bar {
   height: 100%;
-  background-color: #007bff; 
-  transition: width 0.3s ease;
+  background-color: gray; 
+  z-index: 5;
+  position: relative;
 }
 
 .loading-active {
-  display: none;
+  visibility: hidden;
 }
 
 .info-section {
-  background-color: #010A13; 
-  color: #ede1e1;
-  width: 100%;
+  z-index: 1;
   display: flex;
-  justify-content: center;
-  gap: 5vw;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  flex-direction: column;
+  background-color: black; 
+  height: 1000px;
+  width: 100%;
 }
 
-.info-box {
-  background-color: #1E2328;
+.info-holder {
+  margin-top: 90px;
+  z-index: 3;
+  display: flex;
+  width: 100%;
+  gap: 2vw;
+  justify-content: center;
+}
+
+.info-button {
+  font-family: 'LeagueBoldTextFont';
+  font-size: 20px;
+  opacity: 0.75;
+  background: linear-gradient(to bottom, #2a2b31, #0e0f12);
+  color: white;
+  border-radius: 15px;
+  width: 18%;
+  height: 55px;
+  cursor: pointer;
+  border: none;
+}
+
+.info-button:hover:not(.active) {
+  /*background: linear-gradient(to bottom, #A0A0A0, #3D3D3D);*/
+  background: linear-gradient(to bottom, #2E2F35, #151618); 
+  opacity: 0.95;
+}
+
+.info-button.active {
+  background: linear-gradient(to bottom, #e3e3e3, #818181);
+  color: black;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.6); 
+  transform: scale(0.98);
+}
+
+.content-container {
+  z-index: 5;
+  display: flex;
+  background: #191A1E;
   margin-top: 50px;
+  color: white;
+  border-radius: 20px;
+  width: 78%;
+  min-height: 300px;
+  align-self: center;
+  box-shadow: inset 0px 2px rgba(243, 243, 243, 0.06);
+}
+
+.content-text {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
   padding: 30px;
-  border-radius: 10px;
-  width: 25%;
-  height: 300px;
+}
+
+.content-image {
+  display: flex;
+  padding: 30px;
 }
 
 h2 {
-  font-size: 20px;
+  font-family: 'LeagueBoldTextFont';
+  font-size: 24px;
 }
 
 p {
-  margin-bottom: 10px;
-  font-size: 16px;
+  font-family: 'LeagueRegularTextFont';
+  font-size: 16px; 
+  color: #A09B8C
 }
