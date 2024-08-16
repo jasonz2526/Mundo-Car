@@ -184,7 +184,7 @@ def get_match_data_adjusted(matches, puuid, region):
     df = pd.DataFrame(data)
     return df         
 
-def read_csv(file_path):
+def read_match_id_csv(file_path):
     match_list = []
     name = open(file_path, 'r')
     file = csv.DictReader(name)
@@ -194,7 +194,7 @@ def read_csv(file_path):
 
 def search_csvs(summoner_name, tagline, selected_champion, type):
     if type == 'Pro':
-        directory = '/Users/jasonzhao/Desktop/Mundo-Car/pro_ids_csvs/'
+        directory = './pro_ids_csvs/'
     else:
         directory = '/Users/jasonzhao/Desktop/Mundo-Car/match_ids_csvs/'
     search_pattern = f"{summoner_name}_{tagline}_{selected_champion}_*"
@@ -207,13 +207,15 @@ def search_csvs(summoner_name, tagline, selected_champion, type):
 
 def gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type):
     champ_csvs = search_csvs(summoner_name, tagline, selected_champion, type)
-    ex_csv = read_csv(champ_csvs[0])
+    ex_csv = read_match_id_csv(champ_csvs[0])
     puuid = get_puuid(summoner_name,tagline,mass_region,api_key)
-    ex_data = get_match_data_adjusted(ex_csv,puuid=puuid,region=region)
+    data_df = get_match_data_adjusted(ex_csv,puuid=puuid,region=region)
     if type == 'Pro':
         csv_folder = 'pro_match_info_csvs'
     else:
         csv_folder = 'match_info_csvs'
     csv_filename = f"{summoner_name}_{tagline}_{selected_champion}_match_info.csv"
     csv_file_path = os.path.join(csv_folder, csv_filename)
-    ex_data.to_csv(csv_file_path)
+    data_df.to_csv(csv_file_path)
+    pro_df = pd.read_csv("./pro_info_csvs/feedmeiron_0696_Kai'Sa_match_info.csv")
+

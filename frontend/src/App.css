@@ -1,3 +1,5 @@
+/* App.css */
+
 .App {
   max-width: 100%;
   overflow-x: hidden; 
@@ -236,20 +238,22 @@ input:checked + .slider:before {
   transform: scale(1.2); 
 }
 
-.loading-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 50px; 
-  background-color: #ccc;
+.disabled {
+  opacity: 0.5;
+  pointer-events: none; 
 }
 
-.loading-bar {
-  height: 100%;
-  background-color: gray; 
-  z-index: 5;
-  position: relative;
+.loading-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999; 
+  pointer-events: none; 
+}
+
+.loading-gif {
+  filter: brightness(1.5)
 }
 
 .loading-active {
@@ -261,7 +265,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   background-color: black; 
-  height: 1000px;
+  height: 700px;
   width: 100%;
 }
 

@@ -1,11 +1,12 @@
+import './PlayerStats.css';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Scatter } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -14,24 +15,23 @@ import {
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
 );
 
 const PlayerStats = () => {
-  const [chartData, setChartData] = useState(null);
+  const [chartDataNormal, setChartDataNormal] = useState(null);
+  const [chartDataPro, setChartDataPro] = useState(null);
 
   useEffect(() => {
     const fetchPlayerStats = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/player-stats');
-        console.log('Response data:', response.data);
-        if (Array.isArray(response.data)) {
-          generateChartData(response.data);
-        } else {
-          console.error('Expected an array but got:', response.data);
+        if (response.data) {
+          generateChartData(response.data.normal, setChartDataNormal);
+          generateChartData(response.data.pro, setChartDataPro);
         }
       } catch (error) {
         console.error('Error fetching player stats:', error);
@@ -41,78 +41,93 @@ const PlayerStats = () => {
     fetchPlayerStats();
   }, []);
 
-  const generateChartData = (data) => {
-    const chartPoints = data.map((item) => ({
-      x: item.Duration,
-      y: item.win_rate,
-      r: item.radius,
-    }));
+  const generateChartData = (data, setChartData) => {
+    // Ensure data is sorted by the custom buckets
+    const sortedData = data.sort((a, b) => {
+      const order = ['15 and less', '15-20', '20-25', '25-30', '30-35', '35-40', '40 and more'];
+      return order.indexOf(a.duration_bucket) - order.indexOf(b.duration_bucket);
+    });
+
+    const labels = sortedData.map(item => item.duration_bucket);
+    const winRates = sortedData.map(item => item.win_rate);
 
     setChartData({
+      labels: labels,
       datasets: [
         {
-          label: 'Win Percentage vs. Duration',
-          data: chartPoints,
+          label: 'Win Percentage',
+          data: winRates,
           backgroundColor: 'rgba(75,192,192,0.6)',
           borderColor: 'rgba(75,192,192,1)',
+          borderWidth: 1,
         },
       ],
     });
   };
 
   return (
-    <div style={{ width: '80vw', height: '80vh' }}>
-      {chartData ? (
-        <Scatter
-          data={chartData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-              },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    return `Duration: ${context.raw.x} mins, Win Rate: ${context.raw.y.toFixed(
-                      2
-                    )}%, Matches: ${Math.round(context.raw.r / 2) ** 2}`;
+    <div className='duration-charts-container'>
+      {chartDataNormal && (
+        <div className="chart-container">
+          <h2>Normal Player Stats</h2>
+          <Bar
+            data={chartDataNormal}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Duration (minutes)',
+                  },
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Win Percentage (%)',
+                  },
+                  min: 0,
+                  max: 100,
+                  ticks: {
+                    stepSize: 10,
                   },
                 },
               },
-            },
-            scales: {
-              x: {
-                type: 'linear',
-                position: 'bottom',
-                title: {
-                  display: true,
-                  text: 'Duration (minutes)',
+            }}
+          />
+        </div>
+      )}
+      {chartDataPro && (
+        <div className="chart-container">
+          <h2>Pro Player Stats</h2>
+          <Bar
+            data={chartDataPro}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Duration (minutes)',
+                  },
                 },
-                min: 0,
-                max: 60,
-                ticks: {
-                  autoSkip: false
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Win Percentage (%)',
+                  },
+                  min: 0,
+                  max: 100,
+                  ticks: {
+                    stepSize: 10,
+                  },
                 },
               },
-              y: {
-                title: {
-                  display: true,
-                  text: 'Win Percentage (%)',
-                },
-                min: 0,
-                max: 100,
-                ticks: {
-                  autoSkip: false,
-                  stepSize: 10,
-                },
-              },
-            },
-          }}
-        />
-      ) : (
-        <p>Loading chart...</p>
+            }}
+          />
+        </div>
       )}
     </div>
   );

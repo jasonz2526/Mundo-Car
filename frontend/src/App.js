@@ -7,6 +7,7 @@ import axios from 'axios';
 import splashArtsData from './splash_arts.json';
 import mundoCarLogo from './assets/pngs/mundo-car-logo.png'
 import searchButton from './assets/pngs/search-button.png'
+import loadingGif from './assets/gifs/loading-gif-clear.gif'
 import mundoGif from './assets/gifs/mundo.mp4'; 
 //import { io } from 'socket.io-client';
 //import DataStats from './DataStats';
@@ -47,16 +48,22 @@ const roleOptions = [
 ]
 
 const typeOptions = [
-  { value: 'Pro', label: 'Pro', },
-  { value: 'Reg', label: 'Default'}
+  { value: 'Reg', label: 'Default'},
+  { value: 'Pro', label: 'Pro', }
 ]
 
 function App() {
   const navigate = useNavigate();
   //const socket = io('http://127.0.0.1:5000');
   //const socket = io();
-  const initialSplashArts = splashArtsData['Dr. Mundo'];
-  const initialBackgroundImage = initialSplashArts[0];
+  //const initialSplashArts = splashArtsData['Dr. Mundo'];
+  //const initialBackgroundImage = initialSplashArts[0];
+  //const initialSplashArts = splashArtsData['Lissandra'];
+  //const initialBackgroundImage = initialSplashArts[7];
+  const initialSplashArts = splashArtsData['Morgana'];
+  const initialBackgroundImage = initialSplashArts[10];
+  //const initialSplashArts = splashArtsData['Syndra'];
+  //const initialBackgroundImage = initialSplashArts[11];
   const [backgroundImage, setBackgroundImage] = useState(initialBackgroundImage);
   const [splashArts, setSplashArts] = useState(initialSplashArts);
   const [isPaused, setIsPaused] = useState(true);
@@ -67,7 +74,7 @@ function App() {
   const [selectedChampion, setSelectedChampion] = useState({ label: 'Dr. Mundo', value: 'Dr. Mundo' });
   const [type, setType] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeButton, setActiveButton] = useState(null);
+  const [activeButton, setActiveButton] = useState('what');
 
   useEffect(() => { //for pre-loading jpgs to avoid loading while they cycle
     splashArts.forEach((image) => {
@@ -145,8 +152,13 @@ function App() {
   const handleButtonClick = (buttonId) => {
     setActiveButton(buttonId);
   };
+
+  const isDisabled = !summonerName.trim() || !tagline.trim();
   
   const handleSubmit = async (event) => {
+    if (!summonerName.trim() || !tagline.trim()) {
+      alert('Please fill in both Summoner Name and Tagline.');
+    } else {
     event.preventDefault(); 
     if (loading) return; 
     setLoading(true);
@@ -189,7 +201,7 @@ function App() {
       }
     } finally {
       setLoading(false);
-    }
+    } }
   };
 
   const customFilterOption = (option, inputValue) => {
@@ -208,7 +220,6 @@ function App() {
       <div className="top-bar">
           <div className="logo-container">
             <img src={mundoCarLogo} alt="Mundo Car Logo" className="logo" />
-            {/*<span className="logo-text">MUNDO CAR</span> */}
           </div>
           <div className="toggle-container">
             <span className="status-text">{isPaused ? 'Paused' : 'Rotating'}</span>
@@ -279,15 +290,25 @@ function App() {
               placeholder="Tagline"
               className="tag-input"
             />
-            <div className="search-button-container" onClick={handleSubmit}>
+            <div 
+              className={`search-button-container ${isDisabled ? 'disabled' : ''}`} 
+              onClick={isDisabled ? handleSubmit : handleSubmit}
+              tabIndex="0"
+              role="button"
+            >
               <img src={searchButton} alt="Search" className="search-button" />
             </div>
         </div>
       </div>
       {loading && (
-          <div className="loading-container">
-            <div className="loading-bar"> </div>
-          </div>
+        <div className="loading-container">
+          <img
+            src={loadingGif}
+            className="loading-gif"
+            alt="League Loading GIF"
+            style={{ width: '100%', height: 'auto' }}
+          />
+        </div>
       )}
       <div className="info-section">
         <div className="info-holder">
@@ -320,32 +341,40 @@ function App() {
           {activeButton === 'what' && ( 
             <div className = "content-container">
               <div className = "content-text"> 
-                <h2>Simple, Powerful, and Fun. Mundo-Style.</h2>
-                <p>Mundo Car is the culmination of stuff that I would've loved coming into League. As one of the hardest games to even get started, with only general tier lists and YouTube guides to work with, personlly improving and not going 0-10 every game seemed impossible.</p>
+                <h2>Simple, Powerful, and Fun. Like Mundo.</h2>
+                <p>Mundo Car is the culmination of stuff that I would've loved coming into League. As one of the hardest games to even get started, with only general tier lists and YouTube guides to work with, personally improving and not going 0-10 every game seemed impossible.</p>
                 <p>As such, to make the experience as personalized and informative as possible, Mundo utilizes your in-game stats and compares it to the best in the world to answer two simple questions:</p>
                 <p>1. What am I doing wrong?</p>
                 <p>2. How can I do better?</p>
               </div>
               <div className = "content-image"> 
-              <video 
-                src={mundoGif} 
-                width="100%" 
-                height="auto" 
-                autoPlay 
-                muted 
-                onEnded={(e) => e.target.pause()} 
-              />
+                <video className = "mundo-vid"
+                  src={mundoGif} 
+                  width="100%" 
+                  height="auto" 
+                  autoPlay 
+                  muted 
+                  onEnded={(e) => e.target.pause()} 
+                />
               </div>
             </div>
           )}
           {activeButton === 'how' && (
-            <p>Content for How Mundo?</p>
+            <div className = "content-container">
+              
+            </div>
           )}
           {activeButton === 'why' && (
-            <h2>For New Players, by Old Ones</h2>
+            <div className = "content-container">
+              <div className = "content-text">
+                <h2>For New Players, by Old Ones</h2>
+              </div>
+            </div>
           )}
           {activeButton === 'mundo' && (
-            <p>Content for Mundo?</p>
+            <div className = "content-container">
+              
+            </div>
           )}
        {/*</div>*/}
       </div>

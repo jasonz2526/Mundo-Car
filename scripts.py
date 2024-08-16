@@ -2,9 +2,9 @@ from app import save_cache_to_file
 import cassiopeia as cass
 import json, os
 
-#save_cache_to_file
+save_cache_to_file
 
-na_champs = cass.get_champions(region = "NA")
+'''na_champs = cass.get_champions(region = "NA")
 champ_splash_dict = {}
 count = 0
 
@@ -30,4 +30,4 @@ def load_splash_arts_from_file():
     return {}
 
 save_splash_arts_to_file()
-load_splash_arts_from_file()
+load_splash_arts_from_file()'''
