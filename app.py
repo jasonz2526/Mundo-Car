@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 import pandas as pd
 from flask_cors import CORS
 from riot_api import get_puuid, get_matches_with_champion, get_champ_name
-from data_gathering import gather_match_info
+from data_gathering import gather_match_info, calculate_average_diffs
 import cassiopeia as cass
 import os, json, csv, time
 
@@ -14,8 +14,8 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 CACHE_FILE = 'cache.json'
 cacheSwitch = True
-hitCount = 50
-limit = 5000
+hitCount = 5
+limit = 10000
 
 def save_cache_to_file():
     with open(CACHE_FILE, 'w') as f:
@@ -71,7 +71,7 @@ def api_get_everything():
         try:
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
-            champ_list = get_matches_with_champion(selected_champion, summoner, puuid, continent, region, hitCount, limit)
+            champ_list = get_matches_with_champion(selected_champion, role, summoner, puuid, continent, region, hitCount, limit)
 
             result = {
                 'champion': selected_champion,
@@ -96,16 +96,26 @@ def api_get_everything():
                 for match_id in result['champList']:
                     writer.writerow([match_id])
 
+            #gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type)
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    #gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type)
+    data_user = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'sa_early_diff.csv")
+    data_pro = pd.read_csv("./pro_match_info_csvs/doitanyway_kr1_Kai'Sa_early_diff.csv")
 
-    return jsonify(result), 200
+    # Calculate average differences for user and pro datasets
+    user_diffs = calculate_average_diffs(data_user)
+    pro_diffs = calculate_average_diffs(data_pro)
+
+    return {
+        'user': user_diffs,
+        'pro': pro_diffs
+    }
 
 @app.route('/player-stats', methods=['GET'])
 def get_player_stats():
-    data_normal = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'Sa_match_info.csv")
+    '''data_normal = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'Sa_match_info.csv")
     
     bins = [0, 15, 20, 25, 30, 35, 40, float('inf')]
     labels = ['15 and less', '15-20', '20-25', '25-30', '30-35', '35-40', '40 and more']
@@ -116,19 +126,19 @@ def get_player_stats():
         match_count=('duration', 'size')
     ).reset_index()
     duration_win_data_normal['win_rate'] = (duration_win_data_normal['win_count'] / duration_win_data_normal['match_count']) * 100
-    data_normal = duration_win_data_normal.to_dict(orient='records')
+    data_normal = duration_win_data_normal.to_dict(orient='records')'''
 
-    data_pro = pd.read_csv("./pro_match_info_csvs/feedmeiron_0696_Kai'Sa_match_info.csv")
-    data_pro['duration_bucket'] = pd.cut(data_pro['duration'], bins=bins, labels=labels, right=False)
+    data_user = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'sa_early_diff.csv")
+    data_pro = pd.read_csv("./pro_match_info_csvs/doitanyway_kr1_Kai'Sa_early_diff.csv")
 
-    duration_win_data_pro = data_pro.groupby('duration_bucket', observed=True).agg(
-        win_count=('win', 'sum'),
-        match_count=('duration', 'size')
-    ).reset_index()
-    duration_win_data_pro['win_rate'] = (duration_win_data_pro['win_count'] / duration_win_data_pro['match_count']) * 100
-    data_pro = duration_win_data_pro.to_dict(orient='records')
+    # Calculate average differences for user and pro datasets
+    user_diffs = calculate_average_diffs(data_user)
+    pro_diffs = calculate_average_diffs(data_pro)
 
-    return jsonify({'normal': data_normal, 'pro': data_pro})
+    return {
+        'user': user_diffs,
+        'pro': pro_diffs
+    }
 
 @socketio.on('connect')
 def test_connect():

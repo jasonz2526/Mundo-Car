@@ -41,7 +41,7 @@
   width: 100%;
   background-size: cover;
   background-position: center top;
-  transition: background-image 1.3s ease-in-out;
+  transition: background-image 1.5s ease-in-out;
 }
 
 .gradient-overlay {
@@ -169,7 +169,7 @@ input:checked + .slider:before {
 .row-inputs {
   display: flex;
   align-items: center;
-  opacity: 0.8;
+  opacity: 0.75;
   max-height: 60px;
   background-color: aliceblue;
   border-radius: 50px;

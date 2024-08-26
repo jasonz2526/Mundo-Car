@@ -39,12 +39,12 @@ const regionOptions = [
 ];
 
 const roleOptions = [
-  { value: 'N/A', label: 'N/A' },
   { value: 'TOP', label: 'Top' },
   { value: 'JGL', label: 'Jungle' },
   { value: 'MID', label: 'Middle' },
   { value: 'BOT', label: 'Bottom' },
-  { value: 'SUP', label: 'Support' }
+  { value: 'SUP', label: 'Support' },
+  { value: 'N/A', label: 'Any' }
 ]
 
 const typeOptions = [
@@ -58,8 +58,6 @@ function App() {
   //const socket = io();
   //const initialSplashArts = splashArtsData['Dr. Mundo'];
   //const initialBackgroundImage = initialSplashArts[0];
-  //const initialSplashArts = splashArtsData['Lissandra'];
-  //const initialBackgroundImage = initialSplashArts[7];
   const initialSplashArts = splashArtsData['Morgana'];
   const initialBackgroundImage = initialSplashArts[10];
   //const initialSplashArts = splashArtsData['Syndra'];
@@ -94,7 +92,7 @@ function App() {
       const interval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * splashArts.length); //random splash
         setBackgroundImage(splashArts[randomIndex]); 
-      }, 8000); // Change background every x milliseconds
+      }, 6000); // Change background every x milliseconds
 
       return () => clearInterval(interval);
     }
@@ -222,7 +220,7 @@ function App() {
             <img src={mundoCarLogo} alt="Mundo Car Logo" className="logo" />
           </div>
           <div className="toggle-container">
-            <span className="status-text">{isPaused ? 'Paused' : 'Rotating'}</span>
+            <span className="status-text">{isPaused ? 'Paused Slideshow' : 'Enabled Slideshow'}</span>
             <label className="toggle-switch">
               <input type="checkbox" checked={isPaused} onChange={handleToggleChange} />
               <span className="slider"></span>

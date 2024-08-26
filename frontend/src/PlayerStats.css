@@ -5,10 +5,18 @@
   overflow-x: hidden;
 }
 
-.duration-charts-container {
+.metric-charts-container {
   display: flex;
   justify-content: space-around; 
   align-items: flex-start; 
+  
+}
+
+.button-container {
+  
+}
+
+.metric-button {
   
 }
 

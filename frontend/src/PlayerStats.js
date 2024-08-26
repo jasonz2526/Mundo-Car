@@ -1,37 +1,38 @@
 import './PlayerStats.css';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
+  PointElement,
 } from 'chart.js';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  PointElement
 );
 
 const PlayerStats = () => {
-  const [chartDataNormal, setChartDataNormal] = useState(null);
-  const [chartDataPro, setChartDataPro] = useState(null);
+  const [chartData, setChartData] = useState(null);
+  const [metric, setMetric] = useState('cs_diff');
 
   useEffect(() => {
     const fetchPlayerStats = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/player-stats');
         if (response.data) {
-          generateChartData(response.data.normal, setChartDataNormal);
-          generateChartData(response.data.pro, setChartDataPro);
+          generateChartData(response.data, metric, setChartData);
         }
       } catch (error) {
         console.error('Error fetching player stats:', error);
@@ -39,39 +40,77 @@ const PlayerStats = () => {
     };
 
     fetchPlayerStats();
-  }, []);
+  }, [metric]);
 
-  const generateChartData = (data, setChartData) => {
-    // Ensure data is sorted by the custom buckets
-    const sortedData = data.sort((a, b) => {
-      const order = ['15 and less', '15-20', '20-25', '25-30', '30-35', '35-40', '40 and more'];
-      return order.indexOf(a.duration_bucket) - order.indexOf(b.duration_bucket);
-    });
+  const generateChartData = (data, metric, setChartData) => {
+    const { user, pro } = data;
 
-    const labels = sortedData.map(item => item.duration_bucket);
-    const winRates = sortedData.map(item => item.win_rate);
+    const metricMapping = {
+      cs_diff: 'CS Difference',
+      gold_diff: 'Gold Difference',
+      xp_diff: 'XP Difference'
+    };
+
+    const metricLabel = metricMapping[metric] || 'Metric';
+
+    const datasets = [
+      {
+        label: `${metricLabel} (User Wins)`,
+        data: user.wins[metric],
+        borderColor: 'rgba(75,192,192,1)',
+        backgroundColor: 'rgba(75,192,192,0.2)',
+        borderWidth: 2,
+        fill: false,
+      },
+      {
+        label: `${metricLabel} (User Losses)`,
+        data: user.losses[metric],
+        borderColor: 'rgba(45,192,192,1)',
+        backgroundColor: 'rgba(75,75,192,0.2)',
+        borderWidth: 2,
+        fill: false,
+      },
+      {
+        label: `${metricLabel} (Pro Wins)`,
+        data: pro.wins[metric],
+        borderColor: 'rgba(255,99,132,1)',
+        backgroundColor: 'rgba(255,99,132,0.2)',
+        borderWidth: 2,
+        fill: false,
+      },
+      {
+        label: `${metricLabel} (Pro Losses)`,
+        data: pro.losses[metric],
+        borderColor: 'rgba(225,99,132,1)',
+        backgroundColor: 'rgba(255,159,64,0.2)',
+        borderWidth: 2,
+        fill: false,
+      }
+    ];
 
     setChartData({
-      labels: labels,
-      datasets: [
-        {
-          label: 'Win Percentage',
-          data: winRates,
-          backgroundColor: 'rgba(75,192,192,0.6)',
-          borderColor: 'rgba(75,192,192,1)',
-          borderWidth: 1,
-        },
-      ],
+      labels: user.wins.time,
+      datasets: datasets
     });
   };
 
+  const handleMetricChange = (newMetric) => {
+    setMetric(newMetric);
+  };
+
   return (
-    <div className='duration-charts-container'>
-      {chartDataNormal && (
+    <div className='metric-charts-container'>
+      <div className="button-container">
+        <button className='metricButton' onClick={() => handleMetricChange('cs_diff')}>CS Difference</button>
+        <button className='metricButton' onClick={() => handleMetricChange('gold_diff')}>Gold Difference</button>
+        <button className='metricButton' onClick={() => handleMetricChange('xp_diff')}>XP Difference</button>
+      </div>
+
+      {chartData && (
         <div className="chart-container">
-          <h2>Normal Player Stats</h2>
-          <Bar
-            data={chartDataNormal}
+          <h2>{metric === 'cs_diff' ? 'CS Difference Between Lane Opponent' : metric === 'gold_diff' ? 'Gold Difference Between Lane Opponent' : 'XP Difference Between Lane Opponent'}</h2>
+          <Line
+            data={chartData}
             options={{
               responsive: true,
               maintainAspectRatio: false,
@@ -79,50 +118,25 @@ const PlayerStats = () => {
                 x: {
                   title: {
                     display: true,
-                    text: 'Duration (minutes)',
+                    text: 'Time (minutes)',
                   },
                 },
                 y: {
                   title: {
                     display: true,
-                    text: 'Win Percentage (%)',
+                    text: 'Difference',
                   },
-                  min: 0,
-                  max: 100,
-                  ticks: {
-                    stepSize: 10,
-                  },
+                  beginAtZero: true,
                 },
               },
-            }}
-          />
-        </div>
-      )}
-      {chartDataPro && (
-        <div className="chart-container">
-          <h2>Pro Player Stats</h2>
-          <Bar
-            data={chartDataPro}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: 'Duration (minutes)',
-                  },
+              plugins: {
+                legend: {
+                  position: 'top',
                 },
-                y: {
-                  title: {
-                    display: true,
-                    text: 'Win Percentage (%)',
-                  },
-                  min: 0,
-                  max: 100,
-                  ticks: {
-                    stepSize: 10,
-                  },
+                tooltip: {
+                  enabled: true,
+                  mode: 'index',
+                  intersect: false,
                 },
               },
             }}

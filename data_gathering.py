@@ -2,6 +2,7 @@ import cassiopeia as cass
 import pandas as pd
 import fnmatch, os, csv
 from riot_api import get_puuid
+from pymongo import mongo_client
 
 def get_match_data_adjusted(matches, puuid, region):
     data = {
@@ -196,7 +197,7 @@ def search_csvs(summoner_name, tagline, selected_champion, type):
     if type == 'Pro':
         directory = './pro_ids_csvs/'
     else:
-        directory = '/Users/jasonzhao/Desktop/Mundo-Car/match_ids_csvs/'
+        directory = './match_ids_csvs/'
     search_pattern = f"{summoner_name}_{tagline}_{selected_champion}_*"
     try:
         matching_files = [os.path.join(directory, f) for f in os.listdir(directory) if fnmatch.fnmatch(f.lower(), search_pattern.lower())]
@@ -207,15 +208,111 @@ def search_csvs(summoner_name, tagline, selected_champion, type):
 
 def gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type):
     champ_csvs = search_csvs(summoner_name, tagline, selected_champion, type)
-    ex_csv = read_match_id_csv(champ_csvs[0])
+    user_match_id_list = read_match_id_csv(champ_csvs[0])
     puuid = get_puuid(summoner_name,tagline,mass_region,api_key)
-    data_df = get_match_data_adjusted(ex_csv,puuid=puuid,region=region)
+    '''user_df = get_match_data_adjusted(user_match_id_list,puuid=puuid,region=region)
     if type == 'Pro':
         csv_folder = 'pro_match_info_csvs'
     else:
         csv_folder = 'match_info_csvs'
     csv_filename = f"{summoner_name}_{tagline}_{selected_champion}_match_info.csv"
     csv_file_path = os.path.join(csv_folder, csv_filename)
-    data_df.to_csv(csv_file_path)
-    pro_df = pd.read_csv("./pro_info_csvs/feedmeiron_0696_Kai'Sa_match_info.csv")
+    user_df.to_csv(csv_file_path)'''
+    laning_diff(summoner_name, tagline, selected_champion, user_match_id_list, puuid, region)
 
+def laning_diff(summoner_name, tagline, selected_champion, matches, puuid, region):
+
+    a_summoner = cass.get_summoner(puuid=puuid, region=region)
+
+    data_records = []
+
+    # Loop through each match
+    for match_id in matches:
+        try:
+            match = cass.get_match(id=match_id, region=region)
+            timeline = match.timeline
+            
+            # Find the participant ID and lane for the summoner
+            for participant in match.participants:
+                if participant.summoner == a_summoner:
+                    id = participant.id
+                    summoner_lane = participant.lane
+                    summoner_team = participant.team
+                    win = participant.stats.win
+            
+            # Find the opponent in the same lane but different team
+            opponent_id = None
+            for participant in match.participants:
+                if participant.lane == summoner_lane and participant.team != summoner_team:
+                    opponent_id = participant.id
+            
+            # Initialize variables to store differences
+            cs_diff_5, cs_diff_10, cs_diff_15 = None, None, None
+            gold_diff_5, gold_diff_10, gold_diff_15 = None, None, None
+            xp_diff_5, xp_diff_10, xp_diff_15 = None, None, None
+
+            # Loop through each frame in the timeline
+            for minute, frame in enumerate(timeline.frames, start=1):
+                participant_frame = frame.participant_frames[id]
+                opponent_frame = frame.participant_frames[opponent_id]
+                
+                # Calculate differences at 14, 21, and 30 minutes
+                if minute == 5:
+                    cs_diff_5 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_5 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_5 = participant_frame.experience - opponent_frame.experience
+                elif minute == 10:
+                    cs_diff_10 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_10 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_10 = participant_frame.experience - opponent_frame.experience
+                elif minute == 15:
+                    cs_diff_15 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_15 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_15 = participant_frame.experience - opponent_frame.experience
+
+        except Exception as error:
+            print(error)
+            continue
+
+        data_records.append({
+            'match_id': match_id,
+            'cs_diff_5': cs_diff_5,
+            'cs_diff_10': cs_diff_10,
+            'cs_diff_15': cs_diff_15,
+            'gold_diff_5': gold_diff_5,
+            'gold_diff_10': gold_diff_10,
+            'gold_diff_15': gold_diff_15,
+            'xp_diff_5': xp_diff_5,
+            'xp_diff_10': xp_diff_10,
+            'xp_diff_15': xp_diff_15,
+            'win': win
+        })
+
+    df = pd.DataFrame(data_records)
+
+    csv_filename = f"{summoner_name}_{tagline}_{selected_champion}_early_diff.csv"
+    df.to_csv(csv_filename)
+
+
+def calculate_average_diffs(data):
+    wins = data[data['win'] == True]
+    losses = data[data['win'] == False]
+
+    average_diffs_wins = {
+        'time': [5, 10, 15],
+        'cs_diff': [wins['cs_diff_5'].mean(), wins['cs_diff_10'].mean(), wins['cs_diff_15'].mean()],
+        'gold_diff': [wins['gold_diff_5'].mean(), wins['gold_diff_10'].mean(), wins['gold_diff_15'].mean()],
+        'xp_diff': [wins['xp_diff_5'].mean(), wins['xp_diff_10'].mean(), wins['xp_diff_15'].mean()]
+    }
+
+    average_diffs_losses = {
+        'time': [5, 10, 15],
+        'cs_diff': [losses['cs_diff_5'].mean(), losses['cs_diff_10'].mean(), losses['cs_diff_15'].mean()],
+        'gold_diff': [losses['gold_diff_5'].mean(), losses['gold_diff_10'].mean(), losses['gold_diff_15'].mean()],
+        'xp_diff': [losses['xp_diff_5'].mean(), losses['xp_diff_10'].mean(), losses['xp_diff_15'].mean()]
+    }
+    
+    return {
+        'wins': average_diffs_wins,
+        'losses': average_diffs_losses
+    }
