@@ -27,7 +27,7 @@ const customSelectStyle = { //default React Select comes with borders + other ha
   }),
 };
 
-const championNames = ['N/A', ...Object.keys(splashArtsData)];
+const championNames = [...Object.keys(splashArtsData)];
 
 const regionOptions = [
   { value: 'NA', label: 'North America' },
@@ -176,17 +176,18 @@ function App() {
         return;
       }
 
-      navigate('/player-stats', {
-        state: {
-          summonerName,
-          tagline,
-          role,
-          region,
-          selectedChampion: selectedChampion.value,
-          type, 
-          data: response.data // Pass the server response to the next page
-        }
-      });
+      if (type === 'Pro') {
+        alert('Type is Pro, staying on the same page.');
+      } else {
+        navigate('/player-stats', {
+          state: {
+            summonerName,
+            tagline,
+            selectedChampion: selectedChampion.value, 
+            data: response.data 
+          }
+        });
+      }
       
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -222,7 +223,7 @@ function App() {
           <div className="toggle-container">
             <span className="status-text">{isPaused ? 'Paused Slideshow' : 'Enabled Slideshow'}</span>
             <label className="toggle-switch">
-              <input type="checkbox" checked={isPaused} onChange={handleToggleChange} />
+              <input id = "checkbox" type="checkbox" checked={isPaused} onChange={handleToggleChange} />
               <span className="slider"></span>
             </label>
           </div>
@@ -280,6 +281,7 @@ function App() {
               onChange={handleSummonerNameChange}
               placeholder="Summoner Name"
               className="name-input"
+              id="name-input"
             />
             <input
               type="text"
@@ -287,6 +289,7 @@ function App() {
               onChange={handleTaglineChange}
               placeholder="Tagline"
               className="tag-input"
+              id="tag-input"
             />
             <div 
               className={`search-button-container ${isDisabled ? 'disabled' : ''}`} 

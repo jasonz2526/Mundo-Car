@@ -1,19 +1,23 @@
 from flask import Flask, jsonify, request
-#import flask_socketio
 from flask_socketio import SocketIO
 import pandas as pd
 from flask_cors import CORS
-from riot_api import get_puuid, get_matches_with_champion, get_champ_name
-from data_gathering import gather_match_info, calculate_average_diffs
+from riot_api import get_puuid, get_matches_with_champion
+from data_gathering import calculate_average_diffs
 import cassiopeia as cass
-import os, json, csv, time
+import os, json
+from pymongo import MongoClient
 
 app = Flask(__name__)
 CORS(app) 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+client = MongoClient('mongodb://localhost:27017')
+db = client['league_database']
+match_collection = db['matches']
+
 CACHE_FILE = 'cache.json'
-cacheSwitch = True
+cacheSwitch = False
 hitCount = 5
 limit = 10000
 
@@ -39,16 +43,7 @@ def api_get_everything():
     region = data.get('region')
     selected_champion = data.get('selectedChampion')
     type = data.get('type')
-    
-    if(region == "NA" or region == "BR"):
-        mass_region = 'americas'
-        continent = 'AMERICAS'
-    elif(region == "KR" or region == "JP"):
-        mass_region = 'asia'
-        continent = 'ASIA'
-    elif(region == "EUW" or region == "EUNE"):
-        mass_region = 'europe'
-        continent = 'EUROPE'
+    mass_region, continent = get_region_data(region)
 
     cache_key = f"{summoner_name}#{tagline}"
 
@@ -72,6 +67,8 @@ def api_get_everything():
             puuid = get_puuid(summoner_name, tagline, mass_region, api_key)
             summoner = cass.get_summoner(puuid=puuid, region=region)
             champ_list = get_matches_with_champion(selected_champion, role, summoner, puuid, continent, region, hitCount, limit)
+            if champ_list == []:
+                return jsonify({'incorrect region'}), 500
 
             result = {
                 'champion': selected_champion,
@@ -84,34 +81,38 @@ def api_get_everything():
                 cache[cache_key].append(result['champion'])
                 save_cache_to_file()
 
-            if type == 'Pro':
-                csv_folder = 'pro_ids_csvs'
-            else:
-                csv_folder = "match_ids_csvs"
-                
-            csv_file_path = os.path.join(csv_folder, f"{summoner_name}_{tagline}_{selected_champion}_match_id_list.csv")
-            with open(csv_file_path, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['Match ID'])  
-                for match_id in result['champList']:
-                    writer.writerow([match_id])
+            summoner_data = {
+                '_id': f"{summoner_name}_{tagline}", 
+                'puuid': puuid,
+                'summoner_name': summoner_name,
+                'tagline': tagline,
+                'region': region,
+                'type': type
+            }
+
+            champion_data = {
+                f'champions.{selected_champion}': {
+                    'match_ids': champ_list,
+                    'role': role
+                }   
+            }
+
+            update_data = {**summoner_data, **champion_data}
+
+            match_collection.update_one(
+                {'_id': summoner_data['_id']},
+                {'$set': update_data},
+                upsert=True
+            )
 
             #gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type)
+            laning_diff(summoner_name, tagline, selected_champion, champ_list, puuid, region)
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    data_user = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'sa_early_diff.csv")
-    data_pro = pd.read_csv("./pro_match_info_csvs/doitanyway_kr1_Kai'Sa_early_diff.csv")
-
-    # Calculate average differences for user and pro datasets
-    user_diffs = calculate_average_diffs(data_user)
-    pro_diffs = calculate_average_diffs(data_pro)
-
-    return {
-        'user': user_diffs,
-        'pro': pro_diffs
-    }
+    message = "Your data has been processed!"
+    return message
 
 @app.route('/player-stats', methods=['GET'])
 def get_player_stats():
@@ -128,10 +129,22 @@ def get_player_stats():
     duration_win_data_normal['win_rate'] = (duration_win_data_normal['win_count'] / duration_win_data_normal['match_count']) * 100
     data_normal = duration_win_data_normal.to_dict(orient='records')'''
 
-    data_user = pd.read_csv("./match_info_csvs/kitkat_miffy_Kai'sa_early_diff.csv")
-    data_pro = pd.read_csv("./pro_match_info_csvs/doitanyway_kr1_Kai'Sa_early_diff.csv")
+    summoner_name = request.args.get('summonerName')
+    tagline = request.args.get('tagline')
+    champ_name = request.args.get('selectedChampion')
+    user_id =  f"{summoner_name}_{tagline}"
+    
+    document_user = match_collection.find_one({'_id': user_id}) 
+    match_data_user = document_user['match_data']
+    data_user = pd.DataFrame.from_dict(match_data_user, orient='index')
 
-    # Calculate average differences for user and pro datasets
+    '''document_pro = match_collection.find_one({'_id': 'kafkaesk_lay'}) 
+    match_data_pro = document_pro['match_data']
+    data_pro = pd.DataFrame.from_dict(match_data_pro, orient='index')'''
+
+    match_data_pro = gather_info(champ_name)
+    data_pro = pd.DataFrame.from_dict(match_data_pro, orient='index')
+
     user_diffs = calculate_average_diffs(data_user)
     pro_diffs = calculate_average_diffs(data_pro)
 
@@ -139,6 +152,101 @@ def get_player_stats():
         'user': user_diffs,
         'pro': pro_diffs
     }
+
+def gather_info(champ_name):
+ 
+    # champ_name = 'Evelynn'
+    query = {'type': 'Pro', f'champions.{champ_name}': {'$exists': True}}
+    documents = match_collection.find(query)
+
+    combined_matches = {}
+
+    for document in documents:
+        match_data = document['match_data']
+        combined_matches.update(match_data)
+
+    return combined_matches
+
+
+def get_region_data(region):
+    region_map = {
+        "NA": ('americas', 'AMERICAS'),
+        "BR": ('americas', 'AMERICAS'),
+        "KR": ('asia', 'ASIA'),
+        "JP": ('asia', 'ASIA'),
+        "EUW": ('europe', 'EUROPE'),
+        "EUNE": ('europe', 'EUROPE')
+    }
+
+    return region_map.get(region, (None, None))
+
+def laning_diff(summoner_name, tagline, selected_champion, matches, puuid, region):
+    a_summoner = cass.get_summoner(puuid=puuid, region=region)
+    match_data = {}
+
+    for match_id in matches:
+        try:
+            match = cass.get_match(id=match_id, region=region)
+            timeline = match.timeline
+            
+            for participant in match.participants:
+                if participant.summoner == a_summoner:
+                    id = participant.id
+                    summoner_lane = participant.lane
+                    summoner_team = participant.team
+                    win = participant.stats.win
+
+            opponent_id = None
+            for participant in match.participants:
+                if participant.lane == summoner_lane and participant.team != summoner_team:
+                    opponent_id = participant.id
+
+            cs_diff_5, cs_diff_10, cs_diff_15 = None, None, None
+            gold_diff_5, gold_diff_10, gold_diff_15 = None, None, None
+            xp_diff_5, xp_diff_10, xp_diff_15 = None, None, None
+
+            for minute, frame in enumerate(timeline.frames, start=1):
+                participant_frame = frame.participant_frames[id]
+                opponent_frame = frame.participant_frames[opponent_id]
+                
+                if minute == 5:
+                    cs_diff_5 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_5 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_5 = participant_frame.experience - opponent_frame.experience
+                elif minute == 10:
+                    cs_diff_10 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_10 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_10 = participant_frame.experience - opponent_frame.experience
+                elif minute == 15:
+                    cs_diff_15 = participant_frame.creep_score - opponent_frame.creep_score
+                    gold_diff_15 = participant_frame.gold_earned - opponent_frame.gold_earned
+                    xp_diff_15 = participant_frame.experience - opponent_frame.experience
+
+            match_data[match_id] = {
+                'cs_diff_5': cs_diff_5,
+                'cs_diff_10': cs_diff_10,
+                'cs_diff_15': cs_diff_15,
+                'gold_diff_5': gold_diff_5,
+                'gold_diff_10': gold_diff_10,
+                'gold_diff_15': gold_diff_15,
+                'xp_diff_5': xp_diff_5,
+                'xp_diff_10': xp_diff_10,
+                'xp_diff_15': xp_diff_15,
+                'win': win
+            }
+
+        except Exception as error:
+            print(error)
+            continue
+
+    match_collection.update_one(
+        {'_id': f"{summoner_name}_{tagline}"},
+        {
+            '$set': {f'match_data.{match_id}': match_info for match_id, match_info in match_data.items()},
+            '$setOnInsert': {'champion': selected_champion}
+        },
+        upsert=True
+    )
 
 @socketio.on('connect')
 def test_connect():

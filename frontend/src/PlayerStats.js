@@ -1,5 +1,6 @@
 import './PlayerStats.css';
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import {
@@ -26,11 +27,20 @@ ChartJS.register(
 const PlayerStats = () => {
   const [chartData, setChartData] = useState(null);
   const [metric, setMetric] = useState('cs_diff');
+  const location = useLocation();
+  const {summonerName, tagline, selectedChampion } = location.state || {};
 
   useEffect(() => {
     const fetchPlayerStats = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/player-stats');
+        const response = await axios.get('http://127.0.0.1:5000/player-stats', {
+          params: {
+            summonerName,
+            tagline,
+            selectedChampion
+          }
+        });
+
         if (response.data) {
           generateChartData(response.data, metric, setChartData);
         }
@@ -40,7 +50,7 @@ const PlayerStats = () => {
     };
 
     fetchPlayerStats();
-  }, [metric]);
+  }, [summonerName, tagline, selectedChampion, metric]);
 
   const generateChartData = (data, metric, setChartData) => {
     const { user, pro } = data;
