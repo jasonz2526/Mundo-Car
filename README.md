@@ -38,11 +38,14 @@
 To see Mundo Car in action, check out the demonstration below:
 
 ### GIFs & Images
-- **Overview of Player Stats Comparison**:
-![WIP]()
+- **Home Page**:
+<img width="1496" alt="Screenshot 2024-09-18 at 10 27 52 PM" src="https://github.com/user-attachments/assets/535e9fed-9e66-4dd0-911a-459f7f7df1b6">
 
 - **Interactive Charts**:
-![WIP]()
+<img width="1496" alt="Screenshot 2024-09-18 at 10 32 12 PM" src="https://github.com/user-attachments/assets/390021f8-f144-4725-a062-333bad925b3b">
+
+
+<img width="1496" alt="Screenshot 2024-09-18 at 10 30 53 PM" src="https://github.com/user-attachments/assets/a9291335-8b02-439a-a061-7b2d32a66a2b">
 
 ### Video
 - **Project Demo**:
