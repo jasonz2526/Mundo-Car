@@ -1,70 +1,57 @@
-# Getting Started with Create React App
+# Mundo Car
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Description
 
-## Available Scripts
+**Mundo Car** is a personal project designed to provide detailed insights into League of Legends gameplay. By utilizing a React frontend and Flask backend with MongoDB, Mundo Car allows users to compare their in-game performance against high elo players, offering strategic feedback to help them improve.
 
-In the project directory, you can run:
+### Key Features:
+- **RESTful APIs**: Built using Flask to handle requests and serve data efficiently.
+- **MongoDB Integration**: Scalable storage solution for player statistics, match histories, and game-related data.
+- **Asynchronous Data Fetching**: Axios in React is used to fetch and display historical player data.
+- **Interactive Visualizations**: Created with Chart.js, these visualizations allow users to compare their stats with high-level players, enhancing the analysis with dynamic CSS styling.
 
-### `npm start`
+## Checklist of Things to Accomplish
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1. **Make MongoDB Cloud-Based**:  
+   Replace the local MongoDB instance with a cloud-hosted solution like MongoDB Atlas. This will allow the app to run on any device, enabling seamless access to the database from anywhere.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+2. **AI/ML Integration for Pattern Recognition**:  
+   Incorporate machine learning models to better predict patterns in player performance, such as identifying trends in farming, ganking, and objective control compared to high-level players. This will enable more personalized feedback and strategic recommendations for users.
 
-### `npm test`
+3. **Real-Time Data Processing**:  
+   Implement real-time data fetching and processing to give users immediate feedback on their gameplay during live matches. This would enhance the functionality of the app beyond post-game analysis.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+4. **Add Advanced Visualization Features**:  
+   Expand the current Chart.js implementation to include more interactive and insightful visualizations. Potential features include a heat map for jungle positioning, timelines of game events, and side-by-side comparisons of user and pro-player actions.
 
-### `npm run build`
+5. **Cross-Platform Compatibility**:  
+   Ensure that the app is compatible across multiple platforms (e.g., desktop, tablet, mobile). This requires optimizing the UI/UX design and adding responsive elements to the React frontend.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+6. **Enhance User Authentication and Profiles**:  
+   Add user authentication (e.g., OAuth, JWT) and profile management so users can save their match history, performance data, and tracked improvements over time.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+7. **Introduce More Roles**:  
+   Create more interactive graphs pertaining to specific roles of League, as right now only Jungle has been fully fleshed out.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Demonstration
 
-### `npm run eject`
+To see Mundo Car in action, check out the demonstration below:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### GIFs & Images
+- **Overview of Player Stats Comparison**:
+![WIP]()
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Interactive Charts**:
+![WIP]()
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Video
+- **Project Demo**:
+[![WIP]()]()
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Acknowledgments
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Flask**: For the robust backend API framework.
+- **MongoDB**: For scalable data storage.
+- **React**: For a dynamic and responsive frontend.
+- **Chart.js**: For creating interactive data visualizations.
+- **Axios**: For handling asynchronous HTTP requests.

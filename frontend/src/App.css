@@ -265,7 +265,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   background-color: black; 
-  height: 700px;
+  height: 800px;
   width: 100%;
 }
 

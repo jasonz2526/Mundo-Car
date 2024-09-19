@@ -1,34 +1,178 @@
 /* PlayerStats.css */
 
-.Player-Stats {
-  max-width: 100%;
-  overflow-x: hidden;
+@font-face {
+  font-family: 'LeagueTitleFont';
+  src: url('./assets/fonts/BeaufortforLOL-Heavy.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LeagueBoldTextFont';
+  src: url('./assets/fonts/Spiegel-Bold.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LeagueRegularTextFont';
+  src: url('./assets/fonts/Spiegel-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.player-stats-container {
+  position: relative;
+}
+
+.champion-background-container {
+  position: fixed; 
+  width: 100%;
+  height: 100vh; 
+  overflow: hidden; 
+  z-index: -1; 
+  top: 0;
+  left: 0;
+}
+
+.background-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.background-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; 
+  background: 
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.1) 50%,  
+      rgba(0, 0, 0, 0.9) 100% 
+    );
+}
+
+.header-text-container {
+  display: block;
+  text-align: center; 
+}
+
+.thanks-text {
+  font-size: 50px;
+  color: #F0E6D2;
+  font-family: 'LeagueTitleFont';
+  margin: 0; 
+}
+
+.scroll-text {
+  font-family: 'LeagueBoldTextFont';
+  font-size: 18px; 
+  color: gold;
+  margin-top: 10px; 
+  text-align: center;
+  opacity: 0.8;
 }
 
 .metric-charts-container {
-  display: flex;
-  justify-content: space-around; 
-  align-items: flex-start; 
-  
+  position: relative;
+  z-index: 5; 
+  width: 100%; 
+  max-width: 600px; 
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  margin-top: 125vh; 
 }
 
 .button-container {
-  
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 2rem;
 }
 
-.metric-button {
-  
+.metricButton {
+  font-family: 'LeagueBoldTextFont';
+  font-size: 15px;
+  opacity: 0.75;
+  background: linear-gradient(to bottom, #2a2b31, #0e0f12);
+  color: white;
+  border-radius: 15px;
+  width: 33%;
+  height: 40px;
+  cursor: pointer;
+  border: none;
+}
+
+.metricButton:hover:not(.active)  {
+  background: linear-gradient(to bottom, #e3e3e3, #818181);
+  color: black;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.6); 
+  transform: scale(0.98);
 }
 
 .chart-container {
-  width: 45%; /* Adjust width as needed */
-  height: 50vh; /* Ensure the container is tall enough */
-  position: relative;
+  width: 100%; 
+  max-width: 600px; 
+  height: 400px; 
   margin: 0 auto;
-  box-sizing: border-box; 
+  background-color: #1e1e1e; 
+  border-radius: 20px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  margin-bottom: 3rem;
+  box-sizing: border-box;
+  color: white;
 }
 
-.chart-container h2 {
+.combined-donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  background-color: #1e1e1e;
+  border-radius: 20px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  margin-bottom: 3rem;
+  box-sizing: border-box;
+  color: white;
+  height: 200%;
+}
+
+.donut-chart-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 900px; 
+}
+
+.donut-chart {
+  width: 45%; 
   text-align: center;
-  margin-bottom: 10px;
+  margin: 0 20px; 
+}
+
+.bar-chart {
+  width: 90%; 
+  height: 300px; 
+  margin-top: 20px;
+}
+
+
+h2 {
+  text-align: center;
+  margin-bottom: 1rem;
 }

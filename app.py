@@ -3,10 +3,13 @@ from flask_socketio import SocketIO
 import pandas as pd
 from flask_cors import CORS
 from riot_api import get_puuid, get_matches_with_champion
-from data_gathering import calculate_average_diffs
+from data_gathering import calculate_average_diffs, laning_diff
+from location import gather_kill_data_master
+from simplified import calculate_additional_stats
 import cassiopeia as cass
 import os, json
 from pymongo import MongoClient
+from API_KEY import API_KEY
 
 app = Flask(__name__)
 CORS(app) 
@@ -15,11 +18,12 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 client = MongoClient('mongodb://localhost:27017')
 db = client['league_database']
 match_collection = db['matches']
+pro_champion_collection = db['pros']
 
 CACHE_FILE = 'cache.json'
-cacheSwitch = False
-hitCount = 5
-limit = 10000
+cacheSwitch = True
+hitCount = 50
+limit = 5000
 
 def save_cache_to_file():
     with open(CACHE_FILE, 'w') as f:
@@ -35,7 +39,7 @@ cache = load_cache_from_file()
 
 @app.route('/api/get_everything', methods=['POST'])
 def api_get_everything():
-    api_key = 'RGAPI-28887941-ef83-4b09-869e-a51fd2e2b671' 
+    api_key = API_KEY
     data = request.json
     summoner_name = data.get('summonerName', '').replace(' ', '').lower()
     tagline = data.get('tagline', '').replace(' ', '').lower()
@@ -107,6 +111,8 @@ def api_get_everything():
 
             #gather_match_info(summoner_name, tagline, selected_champion, region, mass_region, api_key, type)
             laning_diff(summoner_name, tagline, selected_champion, champ_list, puuid, region)
+            df = gather_kill_data_master(champ_list, summoner_name, tagline, selected_champion, puuid, region)
+            calculate_additional_stats(df, summoner_name, tagline, selected_champion)
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -133,14 +139,10 @@ def get_player_stats():
     tagline = request.args.get('tagline')
     champ_name = request.args.get('selectedChampion')
     user_id =  f"{summoner_name}_{tagline}"
-    
+
     document_user = match_collection.find_one({'_id': user_id}) 
     match_data_user = document_user['match_data']
     data_user = pd.DataFrame.from_dict(match_data_user, orient='index')
-
-    '''document_pro = match_collection.find_one({'_id': 'kafkaesk_lay'}) 
-    match_data_pro = document_pro['match_data']
-    data_pro = pd.DataFrame.from_dict(match_data_pro, orient='index')'''
 
     match_data_pro = gather_info(champ_name)
     data_pro = pd.DataFrame.from_dict(match_data_pro, orient='index')
@@ -148,14 +150,17 @@ def get_player_stats():
     user_diffs = calculate_average_diffs(data_user)
     pro_diffs = calculate_average_diffs(data_pro)
 
+    stats = get_advanced_stats(summoner_name, tagline, champ_name)
+    pro_stats = get_pro_gank_stats(champ_name)
+
     return {
         'user': user_diffs,
-        'pro': pro_diffs
+        'pro': pro_diffs,
+        'stats': stats,
+        'pro_stats': pro_stats
     }
 
 def gather_info(champ_name):
- 
-    # champ_name = 'Evelynn'
     query = {'type': 'Pro', f'champions.{champ_name}': {'$exists': True}}
     documents = match_collection.find(query)
 
@@ -166,7 +171,6 @@ def gather_info(champ_name):
         combined_matches.update(match_data)
 
     return combined_matches
-
 
 def get_region_data(region):
     region_map = {
@@ -180,73 +184,38 @@ def get_region_data(region):
 
     return region_map.get(region, (None, None))
 
-def laning_diff(summoner_name, tagline, selected_champion, matches, puuid, region):
-    a_summoner = cass.get_summoner(puuid=puuid, region=region)
-    match_data = {}
-
-    for match_id in matches:
-        try:
-            match = cass.get_match(id=match_id, region=region)
-            timeline = match.timeline
-            
-            for participant in match.participants:
-                if participant.summoner == a_summoner:
-                    id = participant.id
-                    summoner_lane = participant.lane
-                    summoner_team = participant.team
-                    win = participant.stats.win
-
-            opponent_id = None
-            for participant in match.participants:
-                if participant.lane == summoner_lane and participant.team != summoner_team:
-                    opponent_id = participant.id
-
-            cs_diff_5, cs_diff_10, cs_diff_15 = None, None, None
-            gold_diff_5, gold_diff_10, gold_diff_15 = None, None, None
-            xp_diff_5, xp_diff_10, xp_diff_15 = None, None, None
-
-            for minute, frame in enumerate(timeline.frames, start=1):
-                participant_frame = frame.participant_frames[id]
-                opponent_frame = frame.participant_frames[opponent_id]
-                
-                if minute == 5:
-                    cs_diff_5 = participant_frame.creep_score - opponent_frame.creep_score
-                    gold_diff_5 = participant_frame.gold_earned - opponent_frame.gold_earned
-                    xp_diff_5 = participant_frame.experience - opponent_frame.experience
-                elif minute == 10:
-                    cs_diff_10 = participant_frame.creep_score - opponent_frame.creep_score
-                    gold_diff_10 = participant_frame.gold_earned - opponent_frame.gold_earned
-                    xp_diff_10 = participant_frame.experience - opponent_frame.experience
-                elif minute == 15:
-                    cs_diff_15 = participant_frame.creep_score - opponent_frame.creep_score
-                    gold_diff_15 = participant_frame.gold_earned - opponent_frame.gold_earned
-                    xp_diff_15 = participant_frame.experience - opponent_frame.experience
-
-            match_data[match_id] = {
-                'cs_diff_5': cs_diff_5,
-                'cs_diff_10': cs_diff_10,
-                'cs_diff_15': cs_diff_15,
-                'gold_diff_5': gold_diff_5,
-                'gold_diff_10': gold_diff_10,
-                'gold_diff_15': gold_diff_15,
-                'xp_diff_5': xp_diff_5,
-                'xp_diff_10': xp_diff_10,
-                'xp_diff_15': xp_diff_15,
-                'win': win
-            }
-
-        except Exception as error:
-            print(error)
-            continue
-
-    match_collection.update_one(
-        {'_id': f"{summoner_name}_{tagline}"},
-        {
-            '$set': {f'match_data.{match_id}': match_info for match_id, match_info in match_data.items()},
-            '$setOnInsert': {'champion': selected_champion}
-        },
-        upsert=True
+def get_advanced_stats(summoner_name, tagline, champion_name):
+    document = match_collection.find_one(
+        {"_id": f"{summoner_name}_{tagline}", f"champions.{champion_name}": {"$exists": True}}
     )
+
+    if document:
+        champion_data = document['champions'].get(champion_name, {})
+        stats = champion_data['stats']
+
+        return {
+            'Top Lane Ganks Per Game': stats.get('Top Lane Ganks Per Game'),
+            'Mid Lane Ganks Per Game': stats.get('Mid Lane Ganks Per Game'),
+            'Bot Lane Ganks Per Game': stats.get('Bot Lane Ganks Per Game')
+        }
+      
+    else:
+        return f"No data found for summoner {summoner_name} with champion {champion_name}."
+    
+def get_pro_gank_stats(champion_name):
+    query = {"_id": champion_name}
+    
+    result = pro_champion_collection.find_one(query)
+    
+    if result:
+        gank_stats = {
+            'Top Lane Ganks Per Game': result['aggregated_stats'].get('Top Lane Ganks Per Game'),
+            'Mid Lane Ganks Per Game': result['aggregated_stats'].get('Mid Lane Ganks Per Game'),
+            'Bot Lane Ganks Per Game': result['aggregated_stats'].get('Bot Lane Ganks Per Game'),
+        }
+        return gank_stats
+    else:
+        return f"Champion {champion_name} not found."
 
 @socketio.on('connect')
 def test_connect():
@@ -258,5 +227,4 @@ def test_disconnect():
 
 if __name__ == '__main__':
     app.run(debug=True)
-    #socketio.run(app, debug=True)
-
+    #socketio.run(app, debug=True)    

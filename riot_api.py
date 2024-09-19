@@ -3,9 +3,10 @@ from flask import jsonify
 import cassiopeia as cass
 import pandas as pd
 from cassiopeia import Lane
+from API_KEY import API_KEY
 #import flask_socketio 
 
-cass.set_riot_api_key('RGAPI-28887941-ef83-4b09-869e-a51fd2e2b671')
+cass.set_riot_api_key(API_KEY)
 
 def get_puuid(summoner_name, tagline, mass_region, api_key):
     api_url = (
@@ -18,9 +19,7 @@ def get_puuid(summoner_name, tagline, mass_region, api_key):
         "?api_key=" +
         api_key
     )
-    
-    print(api_url)
-    
+      
     resp = requests.get(api_url)
     player_info = resp.json()
     

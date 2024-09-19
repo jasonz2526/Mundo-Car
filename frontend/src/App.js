@@ -25,6 +25,11 @@ const customSelectStyle = { //default React Select comes with borders + other ha
     boxShadow: state.isFocused ? '0 0 0 4px rgba(0, 120, 255, 0.5)' : 'none',
     transition: state.isFocused ? 'box-shadow 0.3s ease' : 'none',
   }),
+  menu: (provided) => ({
+    ...provided,
+    maxHeight: 220, 
+    overflowY: 'auto',
+  }),
 };
 
 const championNames = [...Object.keys(splashArtsData)];
@@ -55,7 +60,6 @@ const typeOptions = [
 function App() {
   const navigate = useNavigate();
   //const socket = io('http://127.0.0.1:5000');
-  //const socket = io();
   //const initialSplashArts = splashArtsData['Dr. Mundo'];
   //const initialBackgroundImage = initialSplashArts[0];
   const initialSplashArts = splashArtsData['Morgana'];
@@ -184,7 +188,7 @@ function App() {
             summonerName,
             tagline,
             selectedChampion: selectedChampion.value, 
-            data: response.data 
+            //data: response.data 
           }
         });
       }

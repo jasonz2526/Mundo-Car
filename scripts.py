@@ -2,11 +2,13 @@ from app import save_cache_to_file
 import cassiopeia as cass
 import json, os
 from pymongo import MongoClient
-#save_cache_to_file
+
+save_cache_to_file
 
 client = MongoClient('mongodb://localhost:27017')
 db = client['league_database']
 match_collection = db['matches']
+pro_champion_collection = db['pros']
 
 
 '''na_champs = cass.get_champions(region = "NA")
@@ -68,16 +70,13 @@ result = match_collection.aggregate(pipeline)
 for results in result:
     print(results.get('combined_matches', []))
 '''
-champ_name = "Evelynn"
-query = {'type': 'Pro', f'champions.{champ_name}': {'$exists': True}}
-documents = match_collection.find(query)
 
-# Step 2: Combine the match data into a single dictionary
-combined_matches = {}
+'''
+all_matches = match_collection.find()
 
-for document in documents:
-    match_data = document['match_data']
-    combined_matches.update(match_data)
+match_list = list(all_matches)
+for match in match_list:
+    match['_id'] = str(match['_id'])
 
-# Now, `combined_matches` will contain the combined match data in the desired format
-print(combined_matches)
+with open('matches.json', 'w') as json_file:
+    json.dump(match_list, json_file, indent=4)'''

@@ -2,7 +2,11 @@ import cassiopeia as cass
 import pandas as pd
 import fnmatch, os, csv
 from riot_api import get_puuid
-from pymongo import mongo_client
+from pymongo import MongoClient
+
+client = MongoClient('mongodb://localhost:27017')
+db = client['league_database']
+match_collection = db['matches']
 
 def get_match_data_adjusted(matches, puuid, region):
     data = {
@@ -220,43 +224,36 @@ def gather_match_info(summoner_name, tagline, selected_champion, region, mass_re
     user_df.to_csv(csv_file_path)'''
     laning_diff(summoner_name, tagline, selected_champion, user_match_id_list, puuid, region)
 
+
 def laning_diff(summoner_name, tagline, selected_champion, matches, puuid, region):
-
     a_summoner = cass.get_summoner(puuid=puuid, region=region)
+    match_data = {}
 
-    data_records = []
-
-    # Loop through each match
     for match_id in matches:
         try:
             match = cass.get_match(id=match_id, region=region)
             timeline = match.timeline
             
-            # Find the participant ID and lane for the summoner
             for participant in match.participants:
                 if participant.summoner == a_summoner:
                     id = participant.id
                     summoner_lane = participant.lane
                     summoner_team = participant.team
                     win = participant.stats.win
-            
-            # Find the opponent in the same lane but different team
+
             opponent_id = None
             for participant in match.participants:
                 if participant.lane == summoner_lane and participant.team != summoner_team:
                     opponent_id = participant.id
-            
-            # Initialize variables to store differences
+
             cs_diff_5, cs_diff_10, cs_diff_15 = None, None, None
             gold_diff_5, gold_diff_10, gold_diff_15 = None, None, None
             xp_diff_5, xp_diff_10, xp_diff_15 = None, None, None
 
-            # Loop through each frame in the timeline
             for minute, frame in enumerate(timeline.frames, start=1):
                 participant_frame = frame.participant_frames[id]
                 opponent_frame = frame.participant_frames[opponent_id]
                 
-                # Calculate differences at 14, 21, and 30 minutes
                 if minute == 5:
                     cs_diff_5 = participant_frame.creep_score - opponent_frame.creep_score
                     gold_diff_5 = participant_frame.gold_earned - opponent_frame.gold_earned
@@ -270,28 +267,31 @@ def laning_diff(summoner_name, tagline, selected_champion, matches, puuid, regio
                     gold_diff_15 = participant_frame.gold_earned - opponent_frame.gold_earned
                     xp_diff_15 = participant_frame.experience - opponent_frame.experience
 
+            match_data[match_id] = {
+                'cs_diff_5': cs_diff_5,
+                'cs_diff_10': cs_diff_10,
+                'cs_diff_15': cs_diff_15,
+                'gold_diff_5': gold_diff_5,
+                'gold_diff_10': gold_diff_10,
+                'gold_diff_15': gold_diff_15,
+                'xp_diff_5': xp_diff_5,
+                'xp_diff_10': xp_diff_10,
+                'xp_diff_15': xp_diff_15,
+                'win': win
+            }
+
         except Exception as error:
             print(error)
             continue
 
-        data_records.append({
-            'match_id': match_id,
-            'cs_diff_5': cs_diff_5,
-            'cs_diff_10': cs_diff_10,
-            'cs_diff_15': cs_diff_15,
-            'gold_diff_5': gold_diff_5,
-            'gold_diff_10': gold_diff_10,
-            'gold_diff_15': gold_diff_15,
-            'xp_diff_5': xp_diff_5,
-            'xp_diff_10': xp_diff_10,
-            'xp_diff_15': xp_diff_15,
-            'win': win
-        })
-
-    df = pd.DataFrame(data_records)
-
-    csv_filename = f"{summoner_name}_{tagline}_{selected_champion}_early_diff.csv"
-    df.to_csv(csv_filename)
+    match_collection.update_one(
+        {'_id': f"{summoner_name}_{tagline}"},
+        {
+            '$set': {f'match_data.{match_id}': match_info for match_id, match_info in match_data.items()},
+            '$setOnInsert': {'champion': selected_champion}
+        },
+        upsert=True
+    )
 
 
 def calculate_average_diffs(data):
