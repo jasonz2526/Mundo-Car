@@ -45,4 +45,4 @@ def construct_pro_location_data(champion_name):
             continue
 
 
-construct_pro_location_data('Viego')
+construct_pro_location_data('Amumu')

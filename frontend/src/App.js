@@ -60,10 +60,10 @@ const typeOptions = [
 function App() {
   const navigate = useNavigate();
   //const socket = io('http://127.0.0.1:5000');
-  //const initialSplashArts = splashArtsData['Dr. Mundo'];
-  //const initialBackgroundImage = initialSplashArts[0];
-  const initialSplashArts = splashArtsData['Morgana'];
-  const initialBackgroundImage = initialSplashArts[10];
+  const initialSplashArts = splashArtsData['Dr. Mundo'];
+  const initialBackgroundImage = initialSplashArts[0];
+  //const initialSplashArts = splashArtsData['Morgana'];
+  //const initialBackgroundImage = initialSplashArts[10];
   //const initialSplashArts = splashArtsData['Syndra'];
   //const initialBackgroundImage = initialSplashArts[11];
   const [backgroundImage, setBackgroundImage] = useState(initialBackgroundImage);
@@ -333,7 +333,7 @@ function App() {
             className={`info-button ${activeButton === 'why' ? 'active' : ''}`}
             onClick={() => handleButtonClick('why')}
           >
-            Why use Mundo?
+            What does Mundo?
           </button>
           <button
             className={`info-button ${activeButton === 'mundo' ? 'active' : ''}`}
@@ -342,7 +342,6 @@ function App() {
             Why Mundo Car?
           </button>
         </div>
-        {/*<div className="content-container">*/}
           {activeButton === 'what' && ( 
             <div className = "content-container">
               <div className = "content-text"> 
@@ -366,13 +365,15 @@ function App() {
           )}
           {activeButton === 'how' && (
             <div className = "content-container">
-              
+              <div className = "content-text"> 
+                <h2>It's complicated, kind of.</h2>
+              </div>
             </div>
           )}
           {activeButton === 'why' && (
             <div className = "content-container">
               <div className = "content-text">
-                <h2>For New Players, by Old Ones</h2>
+                <h2>A whole lotta stuff.</h2>
               </div>
             </div>
           )}
@@ -381,7 +382,6 @@ function App() {
               
             </div>
           )}
-       {/*</div>*/}
       </div>
     </div>
   );

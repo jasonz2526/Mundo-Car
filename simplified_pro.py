@@ -168,7 +168,7 @@ def calculate_additional_stats(df, champion_name, role):
         print(f"Inserted stats for {champion_name} ({role})")
 
 
-selected_champion = "Briar"
+selected_champion = "Amumu"
 role = "JGL"
 df = pd.read_csv(f"pro_{selected_champion}_location_data.csv")
 

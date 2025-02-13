@@ -2,7 +2,7 @@ import './PlayerStats.css';
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { Line, Doughnut, Bar } from 'react-chartjs-2';
+import { Line, Doughnut, Bar, Radar } from 'react-chartjs-2';
 import splashArtsData from './splash_arts.json';
 import {
   Chart as ChartJS,
@@ -15,6 +15,9 @@ import {
   PointElement,
   ArcElement,
   BarElement,
+  RadarController,
+  RadialLinearScale,
+  Filler
 } from 'chart.js';
 
 ChartJS.register(
@@ -26,7 +29,10 @@ ChartJS.register(
   Legend,
   PointElement,
   ArcElement,
-  BarElement
+  BarElement,
+  RadarController,
+  RadialLinearScale,
+  Filler
 );
 
 const PlayerStats = () => {
@@ -34,8 +40,10 @@ const PlayerStats = () => {
   const [metric, setMetric] = useState('cs_diff');
   const [gankStats, setGankStats] = useState(null);
   const [proGankStats, setProGankStats] = useState(null);
+  const [differenceStats, setDifferenceStats] = useState(null);
+  const [proDifferenceStats, setProDifferenceStats] = useState(null);
   const [backgroundImage, setBackgroundImage] = useState('');
-  const [scrollY, setScrollY] = useState(0); // Track scroll position
+  const [scrollY, setScrollY] = useState(0); 
   const location = useLocation();
   const { summonerName, tagline, selectedChampion } = location.state || {};
 
@@ -51,10 +59,12 @@ const PlayerStats = () => {
         });
 
         if (response.data) {
-          const { user, pro, stats, pro_stats } = response.data;
+          const { user, pro, stats, pro_stats, diff_stats, pro_diff_stats } = response.data;
           generateChartData({ user, pro }, metric, setChartData);
           setGankStats(stats);
           setProGankStats(pro_stats);
+          setDifferenceStats(diff_stats);
+          setProDifferenceStats(pro_diff_stats);
         }
       } catch (error) {
         console.error('Error fetching player stats:', error);
@@ -78,7 +88,7 @@ const PlayerStats = () => {
 
   const calculateGradientOpacity = () => {
     const factor = 0.7;
-    const maxScroll = (document.body.scrollHeight - window.innerHeight) * 3;
+    const maxScroll = (document.body.scrollHeight - window.innerHeight) * 1;
     const opacity = Math.min((scrollY / maxScroll) * factor, factor);
     return `linear-gradient(rgba(0, 0, 0, ${opacity}), rgba(0, 0, 0, ${opacity})`;
   };
@@ -191,6 +201,42 @@ const PlayerStats = () => {
     };
   };
 
+  const generateRadarChartData = (user, pro) => {
+    return {
+      labels: ['Dragon Diff', 'Baron Diff', 'Jungle CS Diff', 'KP Diff'],  
+      datasets: [
+        {
+          label: 'User Stats',
+          data: [
+            user['Dragon Difference Per Game'],
+            user['Baron Difference Per Game'],
+            user['Jungle CS Difference Per Game'],
+            user['KP Difference Per Game']      
+          ],
+          fill: 'start',
+          backgroundColor: 'rgba(75,192,192,0.2)',
+          borderColor: 'rgba(75,192,192,1)',
+          pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Pro Stats',
+          data: [
+            pro['Dragon Difference Per Game'],
+            pro['Baron Difference Per Game'],
+            pro['Jungle CS Difference Per Game'],
+            pro['KP Difference Per Game'] 
+          ],
+          fill: 'start',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',  
+          borderColor: 'rgba(255, 99, 132, 1)',     
+          pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,                               
+        }
+      ],
+    };
+  };
+  
   const handleMetricChange = (newMetric) => {
     setMetric(newMetric);
   };
@@ -223,15 +269,14 @@ const PlayerStats = () => {
       </div>
 
       <div className='metric-charts-container'>
-        <div className="button-container">
-          <button className='metricButton' onClick={() => handleMetricChange('cs_diff')}>CS Difference</button>
-          <button className='metricButton' onClick={() => handleMetricChange('gold_diff')}>Gold Difference</button>
-          <button className='metricButton' onClick={() => handleMetricChange('xp_diff')}>XP Difference</button>
-        </div>
-
         {chartData && (
-          <div className="chart-container">
+          <div className="chart-container line-chart-container">
             <h2>{metricLabel}</h2>
+            <div className="button-container">
+              <button className='metricButton' onClick={() => handleMetricChange('cs_diff')}>CS Difference</button>
+              <button className='metricButton' onClick={() => handleMetricChange('gold_diff')}>Gold Difference</button>
+              <button className='metricButton' onClick={() => handleMetricChange('xp_diff')}>XP Difference</button>
+            </div>
             <Line
               data={chartData}
               options={{
@@ -282,7 +327,7 @@ const PlayerStats = () => {
         )}
 
         {gankStats && proGankStats && (
-          <div className="combined-donut-chart-container">
+          <div className="chart-container combined-donut-chart-container">
             <h2>Gank Statistics Comparison</h2>
             <div className="donut-chart-container">
               <div className="donut-chart">
@@ -404,6 +449,53 @@ const PlayerStats = () => {
                 }}
               />
             </div>
+          </div>
+        )}
+
+        {differenceStats && proDifferenceStats && (
+          <div className="chart-container radar-chart-container">
+            <h2>Key Difference Stats</h2>
+            <Radar
+              data={generateRadarChartData(differenceStats, proDifferenceStats)}
+              options={{
+                responsive: true,
+                scales: {
+                  r: {
+                    grid: {
+                      color: 'rgba(128, 128, 128, 0.6)'
+                    },
+                    angleLines: {
+                      color: 'gray',
+                    },
+                    ticks: {
+                      backdropColor: 'transparent',
+                      color: 'white', 
+                    },
+                    pointLabels: {
+                      color: 'white',
+                      font: {
+                        size: 14, 
+                      },
+                    }
+                  },
+                },
+                plugins: {
+                  legend: {
+                    position: 'top',
+                    labels: {
+                      color: 'white',
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function (tooltipItem) {
+                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                      },
+                    },
+                  },
+                },
+              }}
+            />
           </div>
         )}
       </div>

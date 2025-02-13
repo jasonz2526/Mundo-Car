@@ -100,7 +100,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 }
 
 .metricButton {
@@ -124,9 +124,6 @@
 }
 
 .chart-container {
-  width: 100%; 
-  max-width: 600px; 
-  height: 400px; 
   margin: 0 auto;
   background-color: #1e1e1e; 
   border-radius: 20px;
@@ -137,40 +134,36 @@
   color: white;
 }
 
+.line-chart-container {
+  width: 100%; 
+}
+
 .combined-donut-chart-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 auto;
-  background-color: #1e1e1e;
-  border-radius: 20px;
-  padding: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2); 
-  margin-bottom: 3rem;
-  box-sizing: border-box;
-  color: white;
-  height: 200%;
 }
 
 .donut-chart-container {
   display: flex;
   justify-content: space-around;
-  width: 100%;
-  max-width: 900px; 
 }
 
 .donut-chart {
-  width: 45%; 
   text-align: center;
-  margin: 0 20px; 
+  margin: 0 -15px;
 }
 
 .bar-chart {
-  width: 90%; 
-  height: 300px; 
+  width: 100%; 
   margin-top: 20px;
 }
 
+.radar-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 h2 {
   text-align: center;

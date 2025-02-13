@@ -3,7 +3,7 @@ import cassiopeia as cass
 import json, os
 from pymongo import MongoClient
 
-save_cache_to_file
+#save_cache_to_file
 
 client = MongoClient('mongodb://localhost:27017')
 db = client['league_database']
@@ -11,7 +11,7 @@ match_collection = db['matches']
 pro_champion_collection = db['pros']
 
 
-'''na_champs = cass.get_champions(region = "NA")
+na_champs = cass.get_champions(region = "NA")
 champ_splash_dict = {}
 count = 0
 
@@ -37,7 +37,7 @@ def load_splash_arts_from_file():
     return {}
 
 save_splash_arts_to_file()
-load_splash_arts_from_file()'''
+load_splash_arts_from_file()
 
 '''
 pipeline = [

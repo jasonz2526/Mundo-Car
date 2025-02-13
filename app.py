@@ -150,14 +150,16 @@ def get_player_stats():
     user_diffs = calculate_average_diffs(data_user)
     pro_diffs = calculate_average_diffs(data_pro)
 
-    stats = get_advanced_stats(summoner_name, tagline, champ_name)
-    pro_stats = get_pro_gank_stats(champ_name)
+    stats, diff_stats = get_advanced_stats(summoner_name, tagline, champ_name)
+    pro_stats, pro_diff_stats = get_pro_gank_stats(champ_name)
 
     return {
         'user': user_diffs,
         'pro': pro_diffs,
         'stats': stats,
-        'pro_stats': pro_stats
+        'pro_stats': pro_stats,
+        'diff_stats': diff_stats,
+        'pro_diff_stats': pro_diff_stats
     }
 
 def gather_info(champ_name):
@@ -193,11 +195,19 @@ def get_advanced_stats(summoner_name, tagline, champion_name):
         champion_data = document['champions'].get(champion_name, {})
         stats = champion_data['stats']
 
-        return {
+        gank_stats = {
             'Top Lane Ganks Per Game': stats.get('Top Lane Ganks Per Game'),
             'Mid Lane Ganks Per Game': stats.get('Mid Lane Ganks Per Game'),
             'Bot Lane Ganks Per Game': stats.get('Bot Lane Ganks Per Game')
         }
+
+        difference_stats = {
+            'Dragon Difference Per Game': stats.get('Dragon Difference Per Game'),
+            'Baron Difference Per Game': stats.get('Baron Difference Per Game'),
+            'Jungle CS Difference Per Game': stats.get('Jungle CS Difference Per Game'),
+            'KP Difference Per Game': stats.get('KP Difference Per Game')
+        }
+        return gank_stats, difference_stats
       
     else:
         return f"No data found for summoner {summoner_name} with champion {champion_name}."
@@ -213,7 +223,14 @@ def get_pro_gank_stats(champion_name):
             'Mid Lane Ganks Per Game': result['aggregated_stats'].get('Mid Lane Ganks Per Game'),
             'Bot Lane Ganks Per Game': result['aggregated_stats'].get('Bot Lane Ganks Per Game'),
         }
-        return gank_stats
+
+        difference_stats = {
+            'Dragon Difference Per Game': result['aggregated_stats'].get('Dragon Difference Per Game'),
+            'Baron Difference Per Game': result['aggregated_stats'].get('Baron Difference Per Game'),
+            'Jungle CS Difference Per Game': result['aggregated_stats'].get('Jungle CS Difference Per Game'),
+            'KP Difference Per Game': result['aggregated_stats'].get('KP Difference Per Game'),
+        }
+        return gank_stats, difference_stats
     else:
         return f"Champion {champion_name} not found."
 
