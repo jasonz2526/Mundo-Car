@@ -1,7 +1,10 @@
 import pandas as pd
+import os
 from openai import OpenAI
-from API_KEY import OPENAI_API_KEY
+#from API_KEY import OPENAI_API_KEY
 from pymongo import MongoClient
+
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 client = OpenAI(
     api_key= OPENAI_API_KEY

@@ -9,7 +9,7 @@ from simplified import calculate_additional_stats
 import cassiopeia as cass
 import os, json
 from pymongo import MongoClient
-from API_KEY import API_KEY
+#from API_KEY import API_KEY
 
 app = Flask(__name__)
 CORS(app) 
@@ -19,9 +19,10 @@ client = MongoClient('mongodb://localhost:27017')
 db = client['league_database']
 match_collection = db['matches']
 pro_champion_collection = db['pros']
+API_KEY = os.environ["RIOT_API_KEY"]
 
 CACHE_FILE = 'cache.json'
-cacheSwitch = True
+cacheSwitch = False
 hitCount = 50
 limit = 5000
 
