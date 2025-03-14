@@ -4,13 +4,15 @@ from openai import OpenAI
 #from API_KEY import OPENAI_API_KEY
 from pymongo import MongoClient
 
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(
     api_key= OPENAI_API_KEY
 )
 
-client = MongoClient('mongodb://localhost:27017/')
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+#client = MongoClient('mongodb://mongodb:27017')
 db = client['league_database']
 match_collection = db['matches']
 pro_champion_collection = db['pros']

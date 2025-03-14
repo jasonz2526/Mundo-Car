@@ -4,7 +4,9 @@ import math, os
 import cassiopeia as cass
 from cassiopeia import Summoner, Champions, Maps, Tower, Side, Item
 
-client = MongoClient('mongodb://localhost:27017')
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+#client = MongoClient('mongodb://mongodb:27017')
 db = client['league_database']
 match_collection = db['matches']
 

@@ -28,7 +28,7 @@ const PlayerStats = () => {
   useEffect(() => {
     const fetchPlayerStats = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/player-stats');
+        const response = await axios.get('http://localhost:5050/player-stats');
         if (response.data) {
           generateChartData(response.data.normal, setChartDataNormal);
           generateChartData(response.data.pro, setChartDataPro);

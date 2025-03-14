@@ -4,7 +4,9 @@ import fnmatch, os, csv
 from riot_api import get_puuid
 from pymongo import MongoClient
 
-client = MongoClient('mongodb://localhost:27017')
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+#client = MongoClient('mongodb://mongodb:27017')
 db = client['league_database']
 match_collection = db['matches']
 

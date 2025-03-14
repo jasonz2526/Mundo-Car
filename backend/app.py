@@ -15,15 +15,18 @@ app = Flask(__name__)
 CORS(app) 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-client = MongoClient('mongodb://localhost:27017')
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+#client = MongoClient('mongodb://localhost:27017')
 db = client['league_database']
 match_collection = db['matches']
 pro_champion_collection = db['pros']
-API_KEY = os.environ["RIOT_API_KEY"]
+API_KEY = os.getenv("API_KEY")
+#API_KEY = os.environ["RIOT_API_KEY"]
 
 CACHE_FILE = 'cache.json'
 cacheSwitch = False
-hitCount = 50
+hitCount = 5
 limit = 5000
 
 def save_cache_to_file():
@@ -244,5 +247,5 @@ def test_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port='5050',debug=True)
     #socketio.run(app, debug=True)    

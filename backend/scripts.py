@@ -5,7 +5,9 @@ from pymongo import MongoClient
 
 #save_cache_to_file
 
-client = MongoClient('mongodb://localhost:27017')
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+#client = MongoClient('mongodb://mongodb:27017')
 db = client['league_database']
 match_collection = db['matches']
 pro_champion_collection = db['pros']

@@ -6,7 +6,8 @@ from cassiopeia import Lane
 #from API_KEY import API_KEY
 #import flask_socketio 
 
-API_KEY = os.environ["RIOT_API_KEY"]
+#API_KEY = os.environ["RIOT_API_KEY"]
+API_KEY = os.getenv("API_KEY")
 cass.set_riot_api_key(API_KEY)
 
 def get_puuid(summoner_name, tagline, mass_region, api_key):

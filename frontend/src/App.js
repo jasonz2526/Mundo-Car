@@ -166,7 +166,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/get_everything', {
+      const response = await axios.post('http://localhost:5050/api/get_everything', {
         summonerName,
         tagline,
         role,
